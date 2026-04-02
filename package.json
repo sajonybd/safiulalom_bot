@@ -8,7 +8,7 @@
     "dev": "npx vercel dev",
     "dev:poll": "node scripts/polling.js",
     "start:webhook": "node server/webhook.js",
-    "lint": "node -c api/telegram.js && node -c api/health.js && node -c lib/bot.js && node -c lib/auth.js && node -c lib/db.js && node -c lib/ledger.js && node -c scripts/polling.js && node -c server/webhook.js"
+    "lint": "node -c api/telegram.js && node -c api/health.js && node -c api/ui.js && node -c api/ui_login.js && node -c api/ui_logout.js && node -c api/ui_ledger.js && node -c api/ui_summary.js && node -c lib/bot.js && node -c lib/auth.js && node -c lib/db.js && node -c lib/ledger.js && node -c lib/session.js && node -c lib/ui_login.js && node -c lib/users.js && node -c scripts/polling.js && node -c server/webhook.js"
   },
   "engines": {
     "node": "20.x"

@@ -18,6 +18,8 @@ Set these in **Vercel → Project → Settings → Environment Variables**:
 - `WEBHOOK_SECRET` (recommended) — any random string (prevents random POSTs)
 - `MONGODB_URI` (required) — MongoDB connection string (Atlas, etc.)
 - `ADMIN_USER_IDS` (recommended) — comma separated Telegram user ids allowed to use the bot
+- `APP_URL` (recommended) — your deployed base URL (used by `/ui` command)
+- `AUTH_SECRET` (required for UI login) — random secret used to secure one-time UI login codes
 
 ## 2.1) Find your Telegram user id
 
@@ -32,6 +34,12 @@ Set these in **Vercel → Project → Settings → Environment Variables**:
 - `/summary` (this month)
 - `/edit <id> 300 updated note`
 - `/del <id>`
+
+## 2.3) Web UI (public)
+
+- In Telegram, run `/ui` to get a one-time login code.
+- Open: `APP_URL/api/ui`
+- Enter your `Telegram ID` + the code to login.
 
 ## 3) Run locally (long polling)
 
