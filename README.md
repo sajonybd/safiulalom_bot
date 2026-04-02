@@ -38,7 +38,8 @@ Set these in **Vercel → Project → Settings → Environment Variables**:
 ## 2.3) Web UI (public)
 
 - In Telegram, run `/ui` to get a one-time login code.
-- Open: `APP_URL/api/ui`
+- Open: `APP_URL/` (redirects to `/api/ui`)
+- Or open directly: `APP_URL/api/ui`
 - Enter your `Telegram ID` + the code to login.
 
 ## 3) Run locally (long polling)

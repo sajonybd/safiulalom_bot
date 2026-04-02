@@ -23,6 +23,16 @@ async function main() {
   const app = express();
   app.use(express.json({ limit: "1mb" }));
 
+  // Same UI/API routes as Vercel, for local/VPS use.
+  app.get("/", (_req, res) => res.redirect(302, "/api/ui"));
+  app.use("/api/ui", require("../api/ui"));
+  app.use("/api/ui_login", require("../api/ui_login"));
+  app.use("/api/ui_logout", require("../api/ui_logout"));
+  app.use("/api/ui_ledger", require("../api/ui_ledger"));
+  app.use("/api/ui_summary", require("../api/ui_summary"));
+  app.use("/api/health", require("../api/health"));
+  app.use("/api/telegram", require("../api/telegram"));
+
   app.get("/health", (_req, res) =>
     res.json({ ok: true, service: "safiulalom_bot" })
   );
@@ -54,4 +64,3 @@ main().catch((err) => {
   console.error(err);
   process.exitCode = 1;
 });
-
