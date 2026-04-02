@@ -16,7 +16,14 @@ async function jsonFetch(path, opts) {
   return data;
 }
 
-export default function Home() {
+export async function getServerSideProps({ req }) {
+  // Gate UI sections server-side; API routes also enforce session.
+  const { getSessionUserId } = require("../lib/session");
+  const userId = await getSessionUserId(req);
+  return { props: { loggedIn: Boolean(userId) } };
+}
+
+export default function Home({ loggedIn }) {
   const [tgId, setTgId] = useState("");
   const [code, setCode] = useState("");
   const [kind, setKind] = useState("out");
@@ -80,6 +87,16 @@ export default function Home() {
         <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", background: "#f7f7f7", padding: 12, borderRadius: 10 }}>{loginOut}</pre>
       </section>
 
+      {!loggedIn ? (
+        <section style={{ border: "1px solid #ddd", borderRadius: 10, padding: 14, margin: "14px 0" }}>
+          <h2>Locked</h2>
+          <p style={{ color: "#666", fontSize: 14 }}>
+            Login na korle ledger data dekhano ba save kora jabe na.
+          </p>
+        </section>
+      ) : null}
+
+      {loggedIn ? (
       <section style={{ border: "1px solid #ddd", borderRadius: 10, padding: 14, margin: "14px 0" }}>
         <h2>Add entry</h2>
         <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
@@ -114,7 +131,9 @@ export default function Home() {
         </p>
         <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", background: "#f7f7f7", padding: 12, borderRadius: 10 }}>{addOut}</pre>
       </section>
+      ) : null}
 
+      {loggedIn ? (
       <section style={{ border: "1px solid #ddd", borderRadius: 10, padding: 14, margin: "14px 0" }}>
         <h2>Recent</h2>
         <p>
@@ -135,7 +154,9 @@ export default function Home() {
         </p>
         <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", background: "#f7f7f7", padding: 12, borderRadius: 10 }}>{listOut}</pre>
       </section>
+      ) : null}
 
+      {loggedIn ? (
       <section style={{ border: "1px solid #ddd", borderRadius: 10, padding: 14, margin: "14px 0" }}>
         <h2>Summary (this month)</h2>
         <p>
@@ -156,7 +177,7 @@ export default function Home() {
         </p>
         <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", background: "#f7f7f7", padding: 12, borderRadius: 10 }}>{sumOut}</pre>
       </section>
+      ) : null}
     </main>
   );
 }
-
