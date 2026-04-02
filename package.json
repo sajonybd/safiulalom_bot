@@ -11,7 +11,7 @@
     "lint": "node -c api/telegram.js && node -c api/health.js && node -c lib/bot.js && node -c scripts/polling.js && node -c server/webhook.js"
   },
   "engines": {
-    "node": ">=18"
+    "node": "20.x"
   },
   "dependencies": {
     "express": "^4.21.2",
