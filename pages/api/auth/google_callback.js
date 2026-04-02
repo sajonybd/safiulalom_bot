@@ -18,9 +18,7 @@ async function handler(req, res) {
 
   const clientId = process.env.AUTH_GOOGLE_ID;
   const clientSecret = process.env.AUTH_GOOGLE_SECRET;
-  const isDev = process.env.NODE_ENV !== "production";
-  const protocol = isDev ? "http" : "https";
-  const hostUrl = isDev ? `${protocol}://${req.headers.host}` : (process.env.APP_URL || `https://${req.headers.host}`);
+  const hostUrl = process.env.APP_URL || (process.env.NODE_ENV === "production" ? `https://${req.headers.host}` : `http://${req.headers.host}`);
   const redirectUri = `${hostUrl}/api/auth/google_callback`;
 
   if (!clientId || !clientSecret) {
