@@ -1,0 +1,21 @@
+{
+  "name": "safiulalom_bot",
+  "version": "0.1.0",
+  "description": "Telegram bot for safiulalom_bot (Vercel webhook).",
+  "license": "MIT",
+  "main": "api/telegram.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "lint": "node -c api/telegram.js && node -c api/health.js"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "dependencies": {
+    "telegraf": "^4.16.3"
+  },
+  "devDependencies": {
+    "vercel": "^34.3.1"
+  }
+}
+
