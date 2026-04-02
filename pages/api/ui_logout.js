@@ -1,6 +1,6 @@
 const { clearSession, getSessionTokenFromReq } = require("../../lib/session");
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
   try {
     if (req.method !== "POST") {
       res.statusCode = 405;
@@ -23,5 +23,7 @@ module.exports = async function handler(req, res) {
     res.setHeader("content-type", "application/json; charset=utf-8");
     res.end(JSON.stringify({ ok: false, error: String(err && err.message ? err.message : err) }));
   }
-};
+}
 
+module.exports = handler;
+module.exports.default = handler;

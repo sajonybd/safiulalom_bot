@@ -1,7 +1,7 @@
 const { getSessionUserId } = require("../../lib/session");
 const { parseAmount, addEntry, listEntries, formatMoney } = require("../../lib/ledger");
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
   try {
     const userId = await getSessionUserId(req);
     if (!userId) {
@@ -65,5 +65,7 @@ module.exports = async function handler(req, res) {
     res.setHeader("content-type", "application/json; charset=utf-8");
     res.end(JSON.stringify({ ok: false, error: String(err && err.message ? err.message : err) }));
   }
-};
+}
 
+module.exports = handler;
+module.exports.default = handler;

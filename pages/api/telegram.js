@@ -1,6 +1,6 @@
 const { getBot } = require("../../lib/bot");
 
-module.exports = async function handler(req, res) {
+async function handler(req, res) {
   try {
     const secret = process.env.WEBHOOK_SECRET;
     if (secret) {
@@ -40,4 +40,7 @@ module.exports = async function handler(req, res) {
     res.statusCode = 200;
     res.end("OK");
   }
-};
+}
+
+module.exports = handler;
+module.exports.default = handler;

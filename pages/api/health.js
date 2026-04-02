@@ -1,6 +1,8 @@
-module.exports = async function handler(_req, res) {
+async function handler(_req, res) {
   res.statusCode = 200;
   res.setHeader("content-type", "application/json; charset=utf-8");
   res.end(JSON.stringify({ ok: true, service: "safiulalom_bot" }));
-};
+}
 
+module.exports = handler;
+module.exports.default = handler;
