@@ -5,7 +5,7 @@
   "license": "MIT",
   "main": "api/telegram.js",
   "scripts": {
-    "dev": "vercel dev",
+    "dev": "npx vercel dev",
     "dev:poll": "node scripts/polling.js",
     "start:webhook": "node server/webhook.js",
     "lint": "node -c api/telegram.js && node -c api/health.js && node -c lib/bot.js && node -c scripts/polling.js && node -c server/webhook.js"
@@ -16,8 +16,5 @@
   "dependencies": {
     "express": "^4.21.2",
     "telegraf": "^4.16.3"
-  },
-  "devDependencies": {
-    "vercel": "^34.3.1"
   }
 }
