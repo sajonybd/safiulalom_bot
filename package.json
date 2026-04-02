@@ -8,13 +8,14 @@
     "dev": "npx vercel dev",
     "dev:poll": "node scripts/polling.js",
     "start:webhook": "node server/webhook.js",
-    "lint": "node -c api/telegram.js && node -c api/health.js && node -c lib/bot.js && node -c scripts/polling.js && node -c server/webhook.js"
+    "lint": "node -c api/telegram.js && node -c api/health.js && node -c lib/bot.js && node -c lib/auth.js && node -c lib/db.js && node -c lib/ledger.js && node -c scripts/polling.js && node -c server/webhook.js"
   },
   "engines": {
     "node": "20.x"
   },
   "dependencies": {
     "express": "^4.21.2",
+    "mongodb": "^6.16.0",
     "telegraf": "^4.16.3"
   }
 }

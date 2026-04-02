@@ -16,6 +16,22 @@ Set these in **Vercel → Project → Settings → Environment Variables**:
 
 - `BOT_TOKEN` (required) — from @BotFather
 - `WEBHOOK_SECRET` (recommended) — any random string (prevents random POSTs)
+- `MONGODB_URI` (required) — MongoDB connection string (Atlas, etc.)
+- `ADMIN_USER_IDS` (recommended) — comma separated Telegram user ids allowed to use the bot
+
+## 2.1) Find your Telegram user id
+
+- Message `@userinfobot` in Telegram to see your numeric user id.
+
+## 2.2) Ledger commands
+
+- `/in 500 gazi theke nilam` (income)
+- `/out 295 bajar` (expense)
+- `/sub 999 Netflix` (subscription expense)
+- `/list 10` (recent entries)
+- `/summary` (this month)
+- `/edit <id> 300 updated note`
+- `/del <id>`
 
 ## 3) Run locally (long polling)
 
