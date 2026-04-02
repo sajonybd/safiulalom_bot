@@ -27,14 +27,10 @@ module.exports = async function handler(req, res) {
     }
 
     const bot = getBot();
-    // Respond immediately so Telegram doesn't treat slow handlers as failures.
+    await bot.handleUpdate(update);
+
     res.statusCode = 200;
     res.end("OK");
-
-    bot.handleUpdate(update).catch((err) => {
-      // eslint-disable-next-line no-console
-      console.error("Telegram handleUpdate error:", err);
-    });
   } catch (err) {
     // IMPORTANT: Always return 200 to Telegram, otherwise Telegram will stop delivering updates
     // and you'll see "Wrong response from the webhook" in getWebhookInfo.
