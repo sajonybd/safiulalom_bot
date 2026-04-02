@@ -32,6 +32,9 @@ Set these in **Vercel → Project → Settings → Environment Variables**:
 - `/in 500 gazi theke nilam` (income)
 - `/out 295 bajar` (expense)
 - `/sub 999 Netflix` (subscription expense)
+- `/person_out Ma 500 medicine` (I gave Ma, so I should get)
+- `/person_in Vaiya 1200 groceries` (Vaiya gave me, so I should pay)
+- `/person_summary Ma` (person-wise balance + recent history)
 - `/list 10` (recent entries)
 - `/summary` (this month)
 - `/edit <id> 300 updated note`

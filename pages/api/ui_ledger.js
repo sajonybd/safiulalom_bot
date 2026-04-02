@@ -1,8 +1,10 @@
 const { getSessionUserId } = require("../../lib/session");
 const {
   parseAmount,
+  parseDateInput,
   addEntry,
   listEntries,
+  listEntriesWithFilter,
   formatMoney,
   deleteEntry,
   updateEntry,
@@ -25,7 +27,39 @@ async function handler(req, res) {
     }
 
     if (req.method === "GET") {
-      const entries = await listEntries({ userId, limit: 20 });
+      const scope = String((req.query && req.query.scope) || "all").trim();
+      const person = String((req.query && req.query.person) || "").trim();
+      const limit = Math.min(
+        100,
+        Math.max(1, Number((req.query && req.query.limit) || 30))
+      );
+
+      let entries;
+      if (scope === "person" && person) {
+        entries = await listEntriesWithFilter({
+          userId,
+          limit,
+          filter: {
+            kind: { $in: ["person_in", "person_out"] },
+            person_key: person.toLowerCase(),
+          },
+        });
+      } else if (scope === "person") {
+        entries = await listEntriesWithFilter({
+          userId,
+          limit,
+          filter: { kind: { $in: ["person_in", "person_out"] } },
+        });
+      } else if (scope === "general") {
+        entries = await listEntriesWithFilter({
+          userId,
+          limit,
+          filter: { kind: { $in: ["in", "out", "sub"] } },
+        });
+      } else {
+        entries = await listEntries({ userId, limit });
+      }
+
       res.statusCode = 200;
       res.setHeader("content-type", "application/json; charset=utf-8");
       res.end(JSON.stringify({ ok: true, entries }));
@@ -34,10 +68,15 @@ async function handler(req, res) {
 
     if (req.method === "POST") {
       const kind = String((req.body && req.body.kind) || "").trim();
-      if (!["in", "out", "sub"].includes(kind)) {
+      if (!["in", "out", "sub", "person_in", "person_out"].includes(kind)) {
         res.statusCode = 400;
         res.setHeader("content-type", "application/json; charset=utf-8");
-        res.end(JSON.stringify({ ok: false, error: "kind must be in|out|sub" }));
+        res.end(
+          JSON.stringify({
+            ok: false,
+            error: "kind must be in|out|sub|person_in|person_out",
+          })
+        );
         return;
       }
 
@@ -50,13 +89,35 @@ async function handler(req, res) {
         return;
       }
 
+      const isPersonEntry = kind === "person_in" || kind === "person_out";
+      const person = String((req.body && req.body.person) || "").trim();
+      if (isPersonEntry && !person) {
+        res.statusCode = 400;
+        res.setHeader("content-type", "application/json; charset=utf-8");
+        res.end(JSON.stringify({ ok: false, error: "person is required" }));
+        return;
+      }
+
+      const createdAt = parseDateInput(req.body && req.body.date);
+      if (
+        (req.body && Object.prototype.hasOwnProperty.call(req.body, "date")) &&
+        !createdAt
+      ) {
+        res.statusCode = 400;
+        res.setHeader("content-type", "application/json; charset=utf-8");
+        res.end(JSON.stringify({ ok: false, error: "invalid date" }));
+        return;
+      }
+
       const { id } = await addEntry({
         userId,
         chatId: null,
         kind,
         amount,
         note,
+        person: isPersonEntry ? person : null,
         rawText: null,
+        createdAt: createdAt || undefined,
       });
 
       res.statusCode = 200;
@@ -65,7 +126,13 @@ async function handler(req, res) {
         JSON.stringify({
           ok: true,
           id,
-          saved: { kind, amount: formatMoney(amount), note },
+          saved: {
+            kind,
+            amount: formatMoney(amount),
+            note,
+            person: isPersonEntry ? person : null,
+            date: createdAt ? createdAt.toISOString() : null,
+          },
         })
       );
       return;
@@ -82,8 +149,13 @@ async function handler(req, res) {
 
       const amountRaw = req.body && req.body.amount;
       const noteRaw = req.body && req.body.note;
+      const personRaw = req.body && req.body.person;
+      const dateRaw = req.body && req.body.date;
       const amount = amountRaw === undefined ? undefined : parseAmount(amountRaw);
       const note = noteRaw === undefined ? undefined : String(noteRaw).trim();
+      const person = personRaw === undefined ? undefined : String(personRaw).trim();
+      const createdAt =
+        dateRaw === undefined ? undefined : parseDateInput(dateRaw);
 
       if (amountRaw !== undefined && amount === null) {
         res.statusCode = 400;
@@ -97,15 +169,39 @@ async function handler(req, res) {
         res.end(JSON.stringify({ ok: false, error: "invalid note" }));
         return;
       }
+      if (personRaw !== undefined && !person) {
+        res.statusCode = 400;
+        res.setHeader("content-type", "application/json; charset=utf-8");
+        res.end(JSON.stringify({ ok: false, error: "invalid person" }));
+        return;
+      }
+      if (dateRaw !== undefined && !createdAt) {
+        res.statusCode = 400;
+        res.setHeader("content-type", "application/json; charset=utf-8");
+        res.end(JSON.stringify({ ok: false, error: "invalid date" }));
+        return;
+      }
 
-      if (amount === undefined && note === undefined) {
+      if (
+        amount === undefined &&
+        note === undefined &&
+        person === undefined &&
+        createdAt === undefined
+      ) {
         res.statusCode = 400;
         res.setHeader("content-type", "application/json; charset=utf-8");
         res.end(JSON.stringify({ ok: false, error: "nothing to update" }));
         return;
       }
 
-      const result = await updateEntry({ userId, id, amount, note });
+      const result = await updateEntry({
+        userId,
+        id,
+        amount,
+        note,
+        person,
+        createdAt,
+      });
       res.statusCode = result.ok ? 200 : 404;
       res.setHeader("content-type", "application/json; charset=utf-8");
       res.end(JSON.stringify({ ok: result.ok }));

@@ -16,8 +16,18 @@ async function jsonFetch(path, opts) {
   return data;
 }
 
+function fmtDate(value) {
+  if (!value) return "-";
+  const d = new Date(value);
+  if (Number.isNaN(d.getTime())) return "-";
+  return d.toISOString().slice(0, 10);
+}
+
+function todayISO() {
+  return new Date().toISOString().slice(0, 10);
+}
+
 export async function getServerSideProps({ req }) {
-  // Gate UI sections server-side; API routes also enforce session.
   const { getSessionUserId } = require("../lib/session");
   const userId = await getSessionUserId(req);
   return { props: { loggedIn: Boolean(userId) } };
@@ -26,594 +36,810 @@ export async function getServerSideProps({ req }) {
 export default function Home({ loggedIn }) {
   const [tgId, setTgId] = useState("");
   const [code, setCode] = useState("");
+  const [loginOut, setLoginOut] = useState("");
 
   const [kind, setKind] = useState("out");
   const [amount, setAmount] = useState("");
   const [note, setNote] = useState("");
+  const [date, setDate] = useState(todayISO());
 
-  const [loginOut, setLoginOut] = useState("");
-  const [busy, setBusy] = useState(false);
+  const [personName, setPersonName] = useState("");
+  const [personDirection, setPersonDirection] = useState("person_out");
+  const [personAmount, setPersonAmount] = useState("");
+  const [personPurpose, setPersonPurpose] = useState("");
+  const [personDate, setPersonDate] = useState(todayISO());
 
   const [entries, setEntries] = useState([]);
   const [stats, setStats] = useState(null);
-  const [error, setError] = useState("");
+  const [people, setPeople] = useState([]);
+  const [selectedPersonKey, setSelectedPersonKey] = useState("");
+  const [personHistory, setPersonHistory] = useState([]);
+  const [selectedPersonSummary, setSelectedPersonSummary] = useState(null);
 
   const [editId, setEditId] = useState("");
   const [editAmount, setEditAmount] = useState("");
   const [editNote, setEditNote] = useState("");
+  const [editPerson, setEditPerson] = useState("");
+  const [editDate, setEditDate] = useState("");
 
-  const canSubmit = useMemo(() => {
-    return ["in", "out", "sub"].includes(kind.trim()) && amount.trim() && note.trim();
-  }, [kind, amount, note]);
+  const [error, setError] = useState("");
+  const [busy, setBusy] = useState(false);
 
-  async function refresh() {
+  const canSaveGeneral = useMemo(
+    () =>
+      ["in", "out", "sub"].includes(kind.trim()) &&
+      amount.trim() &&
+      note.trim(),
+    [kind, amount, note]
+  );
+
+  const canSavePerson = useMemo(
+    () =>
+      ["person_in", "person_out"].includes(personDirection) &&
+      personName.trim() &&
+      personAmount.trim() &&
+      personPurpose.trim(),
+    [personDirection, personName, personAmount, personPurpose]
+  );
+
+  async function refreshDashboard() {
     if (!loggedIn) return;
-    setError("");
-    try {
-      const [listData, sumData] = await Promise.all([
-        jsonFetch("/api/ui_ledger", { method: "GET" }),
-        jsonFetch("/api/ui_summary", { method: "GET" }),
-      ]);
-      setEntries(Array.isArray(listData.entries) ? listData.entries : []);
-      setStats(sumData);
-    } catch (e) {
-      setError(String(e));
+    const [generalList, summaryData, peopleData] = await Promise.all([
+      jsonFetch("/api/ui_ledger?scope=general&limit=40"),
+      jsonFetch("/api/ui_summary"),
+      jsonFetch("/api/ui_people"),
+    ]);
+
+    setEntries(Array.isArray(generalList.entries) ? generalList.entries : []);
+    setStats(summaryData || null);
+    const peopleRows = Array.isArray(peopleData.people) ? peopleData.people : [];
+    setPeople(peopleRows);
+
+    if (selectedPersonKey) {
+      const detail = await jsonFetch(
+        `/api/ui_people?person=${encodeURIComponent(selectedPersonKey)}`
+      );
+      setSelectedPersonSummary(detail.person || null);
+      setPersonHistory(Array.isArray(detail.history) ? detail.history : []);
     }
   }
 
   useEffect(() => {
-    void refresh();
+    if (!loggedIn) return;
+    void refreshDashboard().catch((e) => setError(String(e)));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loggedIn]);
 
-  function formatKind(k) {
-    if (k === "in") return "Earn";
-    if (k === "out") return "Spend";
-    if (k === "sub") return "Subscription";
-    return k;
+  async function selectPerson(personKey) {
+    setSelectedPersonKey(personKey);
+    setBusy(true);
+    setError("");
+    try {
+      const detail = await jsonFetch(
+        `/api/ui_people?person=${encodeURIComponent(personKey)}`
+      );
+      setSelectedPersonSummary(detail.person || null);
+      setPersonHistory(Array.isArray(detail.history) ? detail.history : []);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
   }
 
-  function kindBadgeStyle(k) {
-    if (k === "in") return { background: "rgba(16,185,129,.12)", color: "#065f46", borderColor: "rgba(16,185,129,.22)" };
-    if (k === "out") return { background: "rgba(239,68,68,.12)", color: "#7f1d1d", borderColor: "rgba(239,68,68,.22)" };
-    if (k === "sub") return { background: "rgba(59,130,246,.12)", color: "#1e3a8a", borderColor: "rgba(59,130,246,.22)" };
-    return { background: "rgba(107,114,128,.12)", color: "#111827", borderColor: "rgba(107,114,128,.22)" };
+  async function saveGeneralEntry() {
+    if (!canSaveGeneral) return;
+    setBusy(true);
+    setError("");
+    try {
+      await jsonFetch("/api/ui_ledger", {
+        method: "POST",
+        body: JSON.stringify({
+          kind: kind.trim(),
+          amount: amount.trim(),
+          note: note.trim(),
+          date: date || undefined,
+        }),
+      });
+      setAmount("");
+      setNote("");
+      await refreshDashboard();
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function savePersonEntry() {
+    if (!canSavePerson) return;
+    setBusy(true);
+    setError("");
+    try {
+      await jsonFetch("/api/ui_ledger", {
+        method: "POST",
+        body: JSON.stringify({
+          kind: personDirection,
+          person: personName.trim(),
+          amount: personAmount.trim(),
+          note: personPurpose.trim(),
+          date: personDate || undefined,
+        }),
+      });
+      setPersonAmount("");
+      setPersonPurpose("");
+      await refreshDashboard();
+      if (selectedPersonKey) await selectPerson(selectedPersonKey);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function removeEntry(id) {
+    setBusy(true);
+    setError("");
+    try {
+      await jsonFetch(`/api/ui_ledger?id=${encodeURIComponent(id)}`, {
+        method: "DELETE",
+      });
+      await refreshDashboard();
+      if (selectedPersonKey) await selectPerson(selectedPersonKey);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function saveEdit() {
+    if (!editId) return;
+    setBusy(true);
+    setError("");
+    try {
+      await jsonFetch("/api/ui_ledger", {
+        method: "PATCH",
+        body: JSON.stringify({
+          id: editId,
+          amount: editAmount || undefined,
+          note: editNote || undefined,
+          person: editPerson || undefined,
+          date: editDate || undefined,
+        }),
+      });
+      setEditId("");
+      setEditAmount("");
+      setEditNote("");
+      setEditPerson("");
+      setEditDate("");
+      await refreshDashboard();
+      if (selectedPersonKey) await selectPerson(selectedPersonKey);
+    } catch (e) {
+      setError(String(e));
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (
-    <div style={{ minHeight: "100vh", background: "radial-gradient(1200px 600px at 10% 0%, rgba(59,130,246,.18), transparent 60%), radial-gradient(1200px 600px at 90% 0%, rgba(16,185,129,.14), transparent 60%), #0b1220", color: "#e5e7eb" }}>
-      <main style={{ maxWidth: 1100, margin: "0 auto", padding: "28px 16px 48px" }}>
-        <header style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, marginBottom: 18 }}>
-          <div>
-            <h1 style={{ margin: 0, fontSize: 22, letterSpacing: 0.2 }}>safiulalom_bot</h1>
-            <div style={{ color: "rgba(229,231,235,.72)", fontSize: 13, marginTop: 6 }}>
-              Track earn, spend, subscriptions, and balance (per-user).
-            </div>
+    <main className="page">
+      <div className="hero">
+        <h1>Personal Ledger</h1>
+        <p>
+          Earn, spend, and person-to-person transaction tracking with clear
+          balances.
+        </p>
+      </div>
+
+      {!loggedIn ? (
+        <section className="card">
+          <h2>Login</h2>
+          <p className="hint">
+            Telegram bot e <code>/ui</code> pathale login code paben.
+          </p>
+          <div className="grid two">
+            <label>
+              Telegram User ID
+              <input
+                value={tgId}
+                onChange={(e) => setTgId(e.target.value)}
+                placeholder="12345678"
+              />
+            </label>
+            <label>
+              Login Code
+              <input
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="6-digit code"
+              />
+            </label>
           </div>
-          <div style={{ display: "flex", gap: 10, alignItems: "center" }}>
+          <div className="row">
             <button
+              className="btn primary"
+              disabled={busy}
               onClick={async () => {
                 setBusy(true);
+                setLoginOut("Logging in...");
                 try {
-                  await refresh();
+                  const data = await jsonFetch("/api/ui_login", {
+                    method: "POST",
+                    body: JSON.stringify({
+                      telegramUserId: tgId.trim(),
+                      code: code.trim(),
+                    }),
+                  });
+                  setLoginOut(JSON.stringify(data, null, 2));
+                  window.location.reload();
+                } catch (e) {
+                  setLoginOut(String(e));
                 } finally {
                   setBusy(false);
                 }
               }}
-              disabled={!loggedIn || busy}
-              style={{
-                padding: "10px 12px",
-                borderRadius: 10,
-                border: "1px solid rgba(148,163,184,.25)",
-                background: "rgba(15,23,42,.8)",
-                color: "#e5e7eb",
-                cursor: !loggedIn || busy ? "not-allowed" : "pointer",
-              }}
             >
-              Refresh
+              Login
             </button>
           </div>
-        </header>
-
-        {error ? (
-          <div style={{ border: "1px solid rgba(239,68,68,.35)", background: "rgba(239,68,68,.12)", padding: 12, borderRadius: 12, marginBottom: 14 }}>
-            <div style={{ fontWeight: 600, marginBottom: 6 }}>Error</div>
-            <div style={{ color: "rgba(229,231,235,.86)", fontSize: 13, whiteSpace: "pre-wrap", wordBreak: "break-word" }}>{error}</div>
-          </div>
-        ) : null}
-
-        <section style={{ display: "grid", gridTemplateColumns: "1.1fr .9fr", gap: 14, alignItems: "start" }}>
-          <div style={{ border: "1px solid rgba(148,163,184,.18)", background: "rgba(15,23,42,.68)", borderRadius: 14, padding: 14 }}>
-            <div style={{ display: "flex", justifyContent: "space-between", gap: 10, alignItems: "center" }}>
-              <div>
-                <div style={{ fontSize: 14, fontWeight: 700 }}>Login</div>
-                <div style={{ color: "rgba(229,231,235,.7)", fontSize: 12, marginTop: 6 }}>
-                  Telegram e <code style={{ background: "rgba(255,255,255,.06)", padding: "2px 6px", borderRadius: 8 }}>/ui</code> diye code nin, tarpor ekhane login korun.
-                </div>
-              </div>
-              <div
-                style={{
-                  fontSize: 12,
-                  padding: "6px 10px",
-                  borderRadius: 999,
-                  border: "1px solid rgba(148,163,184,.25)",
-                  background: loggedIn ? "rgba(16,185,129,.12)" : "rgba(107,114,128,.12)",
-                  color: loggedIn ? "#a7f3d0" : "rgba(229,231,235,.78)",
-                }}
-              >
-                {loggedIn ? "Logged in" : "Locked"}
-              </div>
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 14 }}>
-              <div>
-                <div style={{ fontSize: 12, color: "rgba(229,231,235,.7)", marginBottom: 6 }}>Telegram User ID</div>
-                <input
-                  value={tgId}
-                  onChange={(e) => setTgId(e.target.value)}
-                  placeholder="12345678"
-                  style={{
-                    width: "100%",
-                    padding: 10,
-                    borderRadius: 12,
-                    border: "1px solid rgba(148,163,184,.2)",
-                    background: "rgba(2,6,23,.6)",
-                    color: "#e5e7eb",
-                    outline: "none",
-                  }}
-                />
-              </div>
-              <div>
-                <div style={{ fontSize: 12, color: "rgba(229,231,235,.7)", marginBottom: 6 }}>Login Code</div>
-                <input
-                  value={code}
-                  onChange={(e) => setCode(e.target.value)}
-                  placeholder="6-digit"
-                  style={{
-                    width: "100%",
-                    padding: 10,
-                    borderRadius: 12,
-                    border: "1px solid rgba(148,163,184,.2)",
-                    background: "rgba(2,6,23,.6)",
-                    color: "#e5e7eb",
-                    outline: "none",
-                  }}
-                />
-              </div>
-            </div>
-
-            <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
-              <button
-                onClick={async () => {
-                  setLoginOut("Logging in...");
-                  setBusy(true);
-                  setError("");
-                  try {
-                    const data = await jsonFetch("/api/ui_login", {
-                      method: "POST",
-                      body: JSON.stringify({
-                        telegramUserId: tgId.trim(),
-                        code: code.trim(),
-                      }),
-                    });
-                    setLoginOut(JSON.stringify(data, null, 2));
-                    window.location.reload();
-                  } catch (e) {
-                    setLoginOut(String(e));
-                  } finally {
-                    setBusy(false);
-                  }
-                }}
-                disabled={busy}
-                style={{
-                  padding: "10px 12px",
-                  borderRadius: 12,
-                  border: "1px solid rgba(59,130,246,.35)",
-                  background: "rgba(59,130,246,.18)",
-                  color: "#e5e7eb",
-                  cursor: busy ? "not-allowed" : "pointer",
-                }}
-              >
-                Login
-              </button>
-
-              <button
-                onClick={async () => {
-                  setLoginOut("Logging out...");
-                  setBusy(true);
-                  setError("");
-                  try {
-                    const data = await jsonFetch("/api/ui_logout", {
-                      method: "POST",
-                      body: "{}",
-                    });
-                    setLoginOut(JSON.stringify(data, null, 2));
-                    window.location.reload();
-                  } catch (e) {
-                    setLoginOut(String(e));
-                  } finally {
-                    setBusy(false);
-                  }
-                }}
-                disabled={busy}
-                style={{
-                  padding: "10px 12px",
-                  borderRadius: 12,
-                  border: "1px solid rgba(148,163,184,.25)",
-                  background: "rgba(2,6,23,.35)",
-                  color: "#e5e7eb",
-                  cursor: busy ? "not-allowed" : "pointer",
-                }}
-              >
-                Logout
-              </button>
-            </div>
-
-            {loginOut ? (
-              <pre style={{ whiteSpace: "pre-wrap", wordBreak: "break-word", background: "rgba(2,6,23,.45)", padding: 12, borderRadius: 12, marginTop: 12, color: "rgba(229,231,235,.86)", fontSize: 12 }}>
-                {loginOut}
-              </pre>
-            ) : null}
-          </div>
-
-          <div style={{ border: "1px solid rgba(148,163,184,.18)", background: "rgba(15,23,42,.68)", borderRadius: 14, padding: 14 }}>
-            <div style={{ fontSize: 14, fontWeight: 700 }}>Overview</div>
-            <div style={{ color: "rgba(229,231,235,.7)", fontSize: 12, marginTop: 6 }}>
-              Summary updates from your entries.
-            </div>
-
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}>
-              <div style={{ border: "1px solid rgba(148,163,184,.14)", background: "rgba(2,6,23,.35)", borderRadius: 12, padding: 12 }}>
-                <div style={{ color: "rgba(229,231,235,.7)", fontSize: 12 }}>This month net</div>
-                <div style={{ fontSize: 20, fontWeight: 800, marginTop: 6 }}>
-                  {loggedIn && stats && stats.month ? stats.month.net : "--"}
-                </div>
-                <div style={{ color: "rgba(229,231,235,.7)", fontSize: 12, marginTop: 6 }}>
-                  Earn {loggedIn && stats && stats.month ? stats.month.income : "--"} / Spend {loggedIn && stats && stats.month ? stats.month.expense : "--"}
-                </div>
-              </div>
-              <div style={{ border: "1px solid rgba(148,163,184,.14)", background: "rgba(2,6,23,.35)", borderRadius: 12, padding: 12 }}>
-                <div style={{ color: "rgba(229,231,235,.7)", fontSize: 12 }}>All-time balance</div>
-                <div style={{ fontSize: 20, fontWeight: 800, marginTop: 6 }}>
-                  {loggedIn && stats && stats.allTime ? stats.allTime.net : "--"}
-                </div>
-                <div style={{ color: "rgba(229,231,235,.7)", fontSize: 12, marginTop: 6 }}>
-                  Earn {loggedIn && stats && stats.allTime ? stats.allTime.income : "--"} / Spend {loggedIn && stats && stats.allTime ? stats.allTime.expense : "--"}
-                </div>
-              </div>
-            </div>
-
-            {!loggedIn ? (
-              <div style={{ marginTop: 12, color: "rgba(229,231,235,.72)", fontSize: 12 }}>
-                Login required to view stats.
-              </div>
-            ) : null}
-          </div>
+          {loginOut ? <pre className="out">{loginOut}</pre> : null}
         </section>
-
-        {loggedIn ? (
-          <section style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 14, marginTop: 14 }}>
-            <div style={{ border: "1px solid rgba(148,163,184,.18)", background: "rgba(15,23,42,.68)", borderRadius: 14, padding: 14 }}>
-              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-                <div>
-                  <div style={{ fontSize: 14, fontWeight: 700 }}>Add entry</div>
-                  <div style={{ color: "rgba(229,231,235,.7)", fontSize: 12, marginTop: 6 }}>
-                    Earn/spend/subscription track korun.
-                  </div>
-                </div>
-              </div>
-
-              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 12 }}>
-                <div>
-                  <div style={{ fontSize: 12, color: "rgba(229,231,235,.7)", marginBottom: 6 }}>Type</div>
-                  <select
-                    value={kind}
-                    onChange={(e) => setKind(e.target.value)}
-                    style={{
-                      width: "100%",
-                      padding: 10,
-                      borderRadius: 12,
-                      border: "1px solid rgba(148,163,184,.2)",
-                      background: "rgba(2,6,23,.6)",
-                      color: "#e5e7eb",
-                      outline: "none",
-                    }}
-                  >
-                    <option value="in">Earn</option>
-                    <option value="out">Spend</option>
-                    <option value="sub">Subscription</option>
-                  </select>
-                </div>
-                <div>
-                  <div style={{ fontSize: 12, color: "rgba(229,231,235,.7)", marginBottom: 6 }}>Amount</div>
-                  <input
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="500"
-                    style={{
-                      width: "100%",
-                      padding: 10,
-                      borderRadius: 12,
-                      border: "1px solid rgba(148,163,184,.2)",
-                      background: "rgba(2,6,23,.6)",
-                      color: "#e5e7eb",
-                      outline: "none",
-                    }}
-                  />
-                </div>
-              </div>
-
-              <div style={{ marginTop: 10 }}>
-                <div style={{ fontSize: 12, color: "rgba(229,231,235,.7)", marginBottom: 6 }}>Note</div>
-                <textarea
-                  value={note}
-                  onChange={(e) => setNote(e.target.value)}
-                  rows={2}
-                  placeholder="gazi theke nilam / bajar / Netflix"
-                  style={{
-                    width: "100%",
-                    padding: 10,
-                    borderRadius: 12,
-                    border: "1px solid rgba(148,163,184,.2)",
-                    background: "rgba(2,6,23,.6)",
-                    color: "#e5e7eb",
-                    outline: "none",
-                    resize: "vertical",
-                    boxSizing: "border-box",
-                  }}
-                />
-              </div>
-
-              <div style={{ display: "flex", gap: 10, marginTop: 12, flexWrap: "wrap" }}>
-                <button
-                  onClick={async () => {
-                    setBusy(true);
-                    setError("");
-                    try {
-                      await jsonFetch("/api/ui_ledger", {
-                        method: "POST",
-                        body: JSON.stringify({
-                          kind: kind.trim(),
-                          amount: amount.trim(),
-                          note: note.trim(),
-                        }),
-                      });
-                      setAmount("");
-                      setNote("");
-                      await refresh();
-                    } catch (e) {
-                      setError(String(e));
-                    } finally {
-                      setBusy(false);
-                    }
-                  }}
-                  disabled={!canSubmit || busy}
-                  style={{
-                    padding: "10px 12px",
-                    borderRadius: 12,
-                    border: "1px solid rgba(16,185,129,.35)",
-                    background: "rgba(16,185,129,.14)",
-                    color: "#e5e7eb",
-                    cursor: !canSubmit || busy ? "not-allowed" : "pointer",
-                  }}
-                >
-                  Save
-                </button>
-
-                <button
-                  onClick={() => {
-                    setKind("out");
-                    setAmount("");
-                    setNote("");
-                  }}
-                  disabled={busy}
-                  style={{
-                    padding: "10px 12px",
-                    borderRadius: 12,
-                    border: "1px solid rgba(148,163,184,.25)",
-                    background: "rgba(2,6,23,.35)",
-                    color: "#e5e7eb",
-                    cursor: busy ? "not-allowed" : "pointer",
-                  }}
-                >
-                  Clear
-                </button>
-              </div>
+      ) : (
+        <>
+          <section className="stats">
+            <div className="stat">
+              <h3>This Month Balance</h3>
+              <strong>{stats && stats.month ? stats.month.net : "--"}</strong>
+              <small>
+                Earn {stats && stats.month ? stats.month.income : "--"} | Spend{" "}
+                {stats && stats.month ? stats.month.expense : "--"}
+              </small>
             </div>
-
-            <div style={{ border: "1px solid rgba(148,163,184,.18)", background: "rgba(15,23,42,.68)", borderRadius: 14, padding: 14 }}>
-              <div style={{ fontSize: 14, fontWeight: 700 }}>Recent entries</div>
-              <div style={{ color: "rgba(229,231,235,.7)", fontSize: 12, marginTop: 6 }}>
-                Manage your latest entries (edit/delete).
-              </div>
-
-              <div style={{ marginTop: 12, overflow: "auto", border: "1px solid rgba(148,163,184,.14)", borderRadius: 12 }}>
-                <table style={{ width: "100%", borderCollapse: "collapse", minWidth: 620 }}>
-                  <thead>
-                    <tr style={{ background: "rgba(2,6,23,.45)" }}>
-                      <th style={{ textAlign: "left", padding: 10, fontSize: 12, color: "rgba(229,231,235,.75)", borderBottom: "1px solid rgba(148,163,184,.14)" }}>Type</th>
-                      <th style={{ textAlign: "left", padding: 10, fontSize: 12, color: "rgba(229,231,235,.75)", borderBottom: "1px solid rgba(148,163,184,.14)" }}>Amount</th>
-                      <th style={{ textAlign: "left", padding: 10, fontSize: 12, color: "rgba(229,231,235,.75)", borderBottom: "1px solid rgba(148,163,184,.14)" }}>Note</th>
-                      <th style={{ textAlign: "left", padding: 10, fontSize: 12, color: "rgba(229,231,235,.75)", borderBottom: "1px solid rgba(148,163,184,.14)" }}>Date</th>
-                      <th style={{ textAlign: "right", padding: 10, fontSize: 12, color: "rgba(229,231,235,.75)", borderBottom: "1px solid rgba(148,163,184,.14)" }}>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {entries.length ? (
-                      entries.map((e) => (
-                        <tr key={e.id} style={{ borderBottom: "1px solid rgba(148,163,184,.1)" }}>
-                          <td style={{ padding: 10 }}>
-                            <span style={{ display: "inline-flex", alignItems: "center", gap: 8, fontSize: 12, padding: "4px 10px", borderRadius: 999, border: "1px solid", ...kindBadgeStyle(e.kind) }}>
-                              {formatKind(e.kind)}
-                            </span>
-                          </td>
-                          <td style={{ padding: 10, fontWeight: 700 }}>{String(e.amount)}</td>
-                          <td style={{ padding: 10, color: "rgba(229,231,235,.88)" }}>{e.note}</td>
-                          <td style={{ padding: 10, color: "rgba(229,231,235,.72)", fontSize: 12 }}>
-                            {e.created_at ? new Date(e.created_at).toISOString().slice(0, 10) : "--"}
-                          </td>
-                          <td style={{ padding: 10, textAlign: "right" }}>
-                            <button
-                              onClick={() => {
-                                setEditId(e.id);
-                                setEditAmount(String(e.amount));
-                                setEditNote(e.note);
-                              }}
-                              disabled={busy}
-                              style={{
-                                padding: "8px 10px",
-                                borderRadius: 10,
-                                border: "1px solid rgba(148,163,184,.25)",
-                                background: "rgba(2,6,23,.35)",
-                                color: "#e5e7eb",
-                                cursor: busy ? "not-allowed" : "pointer",
-                                marginRight: 8,
-                              }}
-                            >
-                              Edit
-                            </button>
-                            <button
-                              onClick={async () => {
-                                if (!confirm("Delete this entry?")) return;
-                                setBusy(true);
-                                setError("");
-                                try {
-                                  await jsonFetch(`/api/ui_ledger?id=${encodeURIComponent(e.id)}`, { method: "DELETE" });
-                                  await refresh();
-                                } catch (ex) {
-                                  setError(String(ex));
-                                } finally {
-                                  setBusy(false);
-                                }
-                              }}
-                              disabled={busy}
-                              style={{
-                                padding: "8px 10px",
-                                borderRadius: 10,
-                                border: "1px solid rgba(239,68,68,.35)",
-                                background: "rgba(239,68,68,.12)",
-                                color: "#fecaca",
-                                cursor: busy ? "not-allowed" : "pointer",
-                              }}
-                            >
-                              Delete
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    ) : (
-                      <tr>
-                        <td colSpan={5} style={{ padding: 14, color: "rgba(229,231,235,.72)", fontSize: 12 }}>
-                          No entries yet.
-                        </td>
-                      </tr>
-                    )}
-                  </tbody>
-                </table>
-              </div>
-
-              {editId ? (
-                <div style={{ marginTop: 12, border: "1px solid rgba(148,163,184,.18)", background: "rgba(2,6,23,.35)", borderRadius: 12, padding: 12 }}>
-                  <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 10 }}>
-                    <div style={{ fontSize: 13, fontWeight: 700 }}>Edit entry</div>
-                    <button
-                      onClick={() => {
-                        setEditId("");
-                        setEditAmount("");
-                        setEditNote("");
-                      }}
-                      disabled={busy}
-                      style={{
-                        padding: "6px 10px",
-                        borderRadius: 10,
-                        border: "1px solid rgba(148,163,184,.25)",
-                        background: "transparent",
-                        color: "rgba(229,231,235,.8)",
-                        cursor: busy ? "not-allowed" : "pointer",
-                      }}
-                    >
-                      Close
-                    </button>
-                  </div>
-
-                  <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginTop: 10 }}>
-                    <div>
-                      <div style={{ fontSize: 12, color: "rgba(229,231,235,.7)", marginBottom: 6 }}>Amount</div>
-                      <input
-                        value={editAmount}
-                        onChange={(e) => setEditAmount(e.target.value)}
-                        style={{
-                          width: "100%",
-                          padding: 10,
-                          borderRadius: 12,
-                          border: "1px solid rgba(148,163,184,.2)",
-                          background: "rgba(2,6,23,.6)",
-                          color: "#e5e7eb",
-                          outline: "none",
-                        }}
-                      />
-                    </div>
-                    <div>
-                      <div style={{ fontSize: 12, color: "rgba(229,231,235,.7)", marginBottom: 6 }}>Note</div>
-                      <input
-                        value={editNote}
-                        onChange={(e) => setEditNote(e.target.value)}
-                        style={{
-                          width: "100%",
-                          padding: 10,
-                          borderRadius: 12,
-                          border: "1px solid rgba(148,163,184,.2)",
-                          background: "rgba(2,6,23,.6)",
-                          color: "#e5e7eb",
-                          outline: "none",
-                        }}
-                      />
-                    </div>
-                  </div>
-
-                  <div style={{ display: "flex", gap: 10, marginTop: 10, flexWrap: "wrap" }}>
-                    <button
-                      onClick={async () => {
-                        setBusy(true);
-                        setError("");
-                        try {
-                          await jsonFetch("/api/ui_ledger", {
-                            method: "PATCH",
-                            body: JSON.stringify({ id: editId, amount: editAmount.trim(), note: editNote.trim() }),
-                          });
-                          setEditId("");
-                          setEditAmount("");
-                          setEditNote("");
-                          await refresh();
-                        } catch (ex) {
-                          setError(String(ex));
-                        } finally {
-                          setBusy(false);
-                        }
-                      }}
-                      disabled={busy}
-                      style={{
-                        padding: "10px 12px",
-                        borderRadius: 12,
-                        border: "1px solid rgba(59,130,246,.35)",
-                        background: "rgba(59,130,246,.16)",
-                        color: "#e5e7eb",
-                        cursor: busy ? "not-allowed" : "pointer",
-                      }}
-                    >
-                      Save changes
-                    </button>
-                  </div>
-                </div>
-              ) : null}
+            <div className="stat">
+              <h3>All-Time Balance</h3>
+              <strong>{stats && stats.allTime ? stats.allTime.net : "--"}</strong>
+              <small>
+                Earn {stats && stats.allTime ? stats.allTime.income : "--"} |
+                Spend {stats && stats.allTime ? stats.allTime.expense : "--"}
+              </small>
+            </div>
+            <div className="stat">
+              <h3>People Count</h3>
+              <strong>{people.length}</strong>
+              <small>Tracked people in transactions</small>
             </div>
           </section>
-        ) : null}
 
-        <footer style={{ marginTop: 18, color: "rgba(229,231,235,.55)", fontSize: 12 }}>
-          Tip: Telegram e <code style={{ background: "rgba(255,255,255,.06)", padding: "2px 6px", borderRadius: 8 }}>/help</code> for commands.
-        </footer>
-      </main>
-    </div>
+          {error ? <section className="error">{error}</section> : null}
+
+          <section className="grid two">
+            <div className="card">
+              <h2>General Entry</h2>
+              <p className="hint">
+                Regular income/expense/subscription add korte parben.
+              </p>
+              <label>
+                Type
+                <select
+                  value={kind}
+                  onChange={(e) => setKind(e.target.value)}
+                >
+                  <option value="in">Earn (in)</option>
+                  <option value="out">Spend (out)</option>
+                  <option value="sub">Subscription (sub)</option>
+                </select>
+              </label>
+              <label>
+                Amount
+                <input
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="500"
+                />
+              </label>
+              <label>
+                Purpose / Note
+                <input
+                  value={note}
+                  onChange={(e) => setNote(e.target.value)}
+                  placeholder="what for?"
+                />
+              </label>
+              <label>
+                Date (old missing transaction add possible)
+                <input
+                  type="date"
+                  value={date}
+                  onChange={(e) => setDate(e.target.value)}
+                />
+              </label>
+              <div className="row">
+                <button
+                  className="btn primary"
+                  disabled={!canSaveGeneral || busy}
+                  onClick={saveGeneralEntry}
+                >
+                  Save General Entry
+                </button>
+              </div>
+            </div>
+
+            <div className="card">
+              <h2>Person Transaction</h2>
+              <p className="hint">
+                Person-wise lenden. Balance auto calculate hobe.
+              </p>
+              <label>
+                Person Name
+                <input
+                  value={personName}
+                  onChange={(e) => setPersonName(e.target.value)}
+                  placeholder="Ma / Vaiya / Friend"
+                />
+              </label>
+              <label>
+                Direction
+                <select
+                  value={personDirection}
+                  onChange={(e) => setPersonDirection(e.target.value)}
+                >
+                  <option value="person_out">
+                    I gave this person (Ami pabo)
+                  </option>
+                  <option value="person_in">
+                    Person gave me (Ami debo)
+                  </option>
+                </select>
+              </label>
+              <label>
+                Amount
+                <input
+                  value={personAmount}
+                  onChange={(e) => setPersonAmount(e.target.value)}
+                  placeholder="1000"
+                />
+              </label>
+              <label>
+                Purpose
+                <input
+                  value={personPurpose}
+                  onChange={(e) => setPersonPurpose(e.target.value)}
+                  placeholder="loan / shopping / medicine"
+                />
+              </label>
+              <label>
+                Date
+                <input
+                  type="date"
+                  value={personDate}
+                  onChange={(e) => setPersonDate(e.target.value)}
+                />
+              </label>
+              <div className="row">
+                <button
+                  className="btn primary"
+                  disabled={!canSavePerson || busy}
+                  onClick={savePersonEntry}
+                >
+                  Save Person Entry
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <section className="card">
+            <h2>People Balances</h2>
+            <p className="hint">
+              Net {">"} 0 hole ami pabo, Net {"<"} 0 hole ami debo.
+            </p>
+            <div className="tableWrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Person</th>
+                    <th>Ami pabo</th>
+                    <th>Ami debo</th>
+                    <th>Net</th>
+                    <th>Count</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {people.length ? (
+                    people.map((p) => (
+                      <tr
+                        key={p.person_key}
+                        className={
+                          selectedPersonKey === p.person_key ? "activeRow" : ""
+                        }
+                        onClick={() => void selectPerson(p.person_key)}
+                      >
+                        <td>{p.person}</td>
+                        <td>{p.receivable}</td>
+                        <td>{p.payable}</td>
+                        <td>{p.net}</td>
+                        <td>{p.count}</td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5}>No person transactions yet.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section className="grid two">
+            <div className="card">
+              <h2>Selected Person History</h2>
+              {!selectedPersonKey ? (
+                <p className="hint">Select a person row to see full history.</p>
+              ) : (
+                <>
+                  <p className="hint">
+                    {selectedPersonSummary
+                      ? `${selectedPersonSummary.person} | Ami pabo: ${selectedPersonSummary.receivable} | Ami debo: ${selectedPersonSummary.payable} | Net: ${selectedPersonSummary.net}`
+                      : "No summary"}
+                  </p>
+                  <div className="tableWrap">
+                    <table>
+                      <thead>
+                        <tr>
+                          <th>Date</th>
+                          <th>Direction</th>
+                          <th>Amount</th>
+                          <th>Purpose</th>
+                          <th>Action</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {personHistory.length ? (
+                          personHistory.map((e) => (
+                            <tr key={e.id}>
+                              <td>{fmtDate(e.created_at)}</td>
+                              <td>
+                                {e.kind === "person_out"
+                                  ? "I gave (Ami pabo)"
+                                  : "I got (Ami debo)"}
+                              </td>
+                              <td>{e.amount}</td>
+                              <td>{e.note}</td>
+                              <td>
+                                <button
+                                  className="btn danger small"
+                                  disabled={busy}
+                                  onClick={() => void removeEntry(e.id)}
+                                >
+                                  Delete
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        ) : (
+                          <tr>
+                            <td colSpan={5}>No history.</td>
+                          </tr>
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+            </div>
+
+            <div className="card">
+              <h2>Edit Any Entry</h2>
+              <p className="hint">
+                ID diye old entry update korte parben (amount/note/person/date).
+              </p>
+              <label>
+                Entry ID
+                <input
+                  value={editId}
+                  onChange={(e) => setEditId(e.target.value)}
+                  placeholder="24-char id"
+                />
+              </label>
+              <label>
+                Amount (optional)
+                <input
+                  value={editAmount}
+                  onChange={(e) => setEditAmount(e.target.value)}
+                  placeholder="amount"
+                />
+              </label>
+              <label>
+                Note (optional)
+                <input
+                  value={editNote}
+                  onChange={(e) => setEditNote(e.target.value)}
+                  placeholder="updated purpose"
+                />
+              </label>
+              <label>
+                Person (optional)
+                <input
+                  value={editPerson}
+                  onChange={(e) => setEditPerson(e.target.value)}
+                  placeholder="name for person transactions"
+                />
+              </label>
+              <label>
+                Date (optional)
+                <input
+                  type="date"
+                  value={editDate}
+                  onChange={(e) => setEditDate(e.target.value)}
+                />
+              </label>
+              <div className="row">
+                <button
+                  className="btn primary"
+                  disabled={!editId.trim() || busy}
+                  onClick={saveEdit}
+                >
+                  Save Edit
+                </button>
+              </div>
+            </div>
+          </section>
+
+          <section className="card">
+            <h2>General History</h2>
+            <div className="tableWrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Note</th>
+                    <th>Action</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {entries.length ? (
+                    entries.map((e) => (
+                      <tr key={e.id}>
+                        <td>{fmtDate(e.created_at)}</td>
+                        <td>{e.kind}</td>
+                        <td>{e.amount}</td>
+                        <td>{e.note}</td>
+                        <td>
+                          <button
+                            className="btn danger small"
+                            disabled={busy}
+                            onClick={() => void removeEntry(e.id)}
+                          >
+                            Delete
+                          </button>
+                        </td>
+                      </tr>
+                    ))
+                  ) : (
+                    <tr>
+                      <td colSpan={5}>No entries found.</td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
+          </section>
+        </>
+      )}
+
+      <style jsx>{`
+        .page {
+          min-height: 100vh;
+          background: #f8fafc;
+          color: #0f172a;
+          padding: 20px 14px 40px;
+          font-family: "Manrope", "Segoe UI", Arial, sans-serif;
+        }
+        .hero {
+          max-width: 1100px;
+          margin: 0 auto 14px;
+        }
+        .hero h1 {
+          margin: 0;
+          font-size: 30px;
+          letter-spacing: -0.02em;
+        }
+        .hero p {
+          margin: 8px 0 0;
+          color: #475569;
+          font-size: 14px;
+        }
+        .card,
+        .stats,
+        .error {
+          max-width: 1100px;
+          margin: 12px auto;
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 16px;
+          padding: 16px;
+          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+        }
+        .stats {
+          display: grid;
+          grid-template-columns: repeat(3, minmax(0, 1fr));
+          gap: 12px;
+          background: transparent;
+          border: 0;
+          box-shadow: none;
+          padding: 0;
+        }
+        .stat {
+          background: #ffffff;
+          border: 1px solid #e2e8f0;
+          border-radius: 16px;
+          padding: 14px;
+          box-shadow: 0 8px 24px rgba(15, 23, 42, 0.05);
+        }
+        .stat h3 {
+          margin: 0;
+          font-size: 12px;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 0.07em;
+        }
+        .stat strong {
+          display: block;
+          margin-top: 10px;
+          font-size: 22px;
+          letter-spacing: -0.02em;
+        }
+        .stat small {
+          display: block;
+          margin-top: 8px;
+          color: #475569;
+          font-size: 12px;
+        }
+        .grid {
+          max-width: 1100px;
+          margin: 0 auto;
+          display: grid;
+          gap: 12px;
+        }
+        .grid.two {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+        h2 {
+          margin: 0;
+          font-size: 18px;
+          letter-spacing: -0.01em;
+        }
+        .hint {
+          margin: 8px 0 0;
+          color: #64748b;
+          font-size: 13px;
+        }
+        label {
+          display: block;
+          margin-top: 10px;
+          font-size: 12px;
+          color: #475569;
+        }
+        input,
+        select {
+          width: 100%;
+          margin-top: 6px;
+          box-sizing: border-box;
+          border: 1px solid #cbd5e1;
+          border-radius: 10px;
+          padding: 10px;
+          font-size: 14px;
+          background: #ffffff;
+          color: #0f172a;
+          outline: none;
+        }
+        input:focus,
+        select:focus {
+          border-color: #0ea5e9;
+          box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.14);
+        }
+        .row {
+          margin-top: 12px;
+          display: flex;
+          gap: 10px;
+          flex-wrap: wrap;
+        }
+        .btn {
+          border: 1px solid #cbd5e1;
+          border-radius: 10px;
+          background: #ffffff;
+          color: #0f172a;
+          font-size: 13px;
+          padding: 9px 12px;
+          cursor: pointer;
+        }
+        .btn:disabled {
+          opacity: 0.6;
+          cursor: not-allowed;
+        }
+        .btn.primary {
+          background: #0ea5e9;
+          border-color: #0284c7;
+          color: #ffffff;
+        }
+        .btn.danger {
+          background: #ef4444;
+          border-color: #dc2626;
+          color: #ffffff;
+        }
+        .btn.small {
+          padding: 6px 10px;
+          font-size: 12px;
+        }
+        .tableWrap {
+          overflow: auto;
+          border: 1px solid #e2e8f0;
+          border-radius: 12px;
+          margin-top: 10px;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          min-width: 560px;
+          background: #ffffff;
+        }
+        th,
+        td {
+          text-align: left;
+          padding: 10px;
+          border-bottom: 1px solid #e2e8f0;
+          font-size: 13px;
+        }
+        th {
+          font-size: 12px;
+          color: #64748b;
+          text-transform: uppercase;
+          letter-spacing: 0.04em;
+          background: #f8fafc;
+        }
+        .activeRow {
+          background: #f0f9ff;
+        }
+        .activeRow td {
+          border-bottom-color: #bae6fd;
+        }
+        .activeRow:hover {
+          background: #e0f2fe;
+        }
+        tbody tr:hover {
+          background: #f8fafc;
+        }
+        .error {
+          border-color: #fecaca;
+          background: #fef2f2;
+          color: #991b1b;
+          font-size: 13px;
+        }
+        .out {
+          white-space: pre-wrap;
+          word-break: break-word;
+          margin-top: 10px;
+          border: 1px solid #e2e8f0;
+          background: #f8fafc;
+          border-radius: 10px;
+          padding: 10px;
+          font-size: 12px;
+          color: #334155;
+        }
+        @media (max-width: 920px) {
+          .grid.two,
+          .stats {
+            grid-template-columns: 1fr;
+          }
+          .hero h1 {
+            font-size: 26px;
+          }
+        }
+      `}</style>
+    </main>
   );
 }
+
