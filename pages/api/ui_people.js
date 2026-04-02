@@ -1,5 +1,11 @@
 const { getSessionUserId } = require("../../lib/session");
-const { peopleBalances, personSummary, listEntriesWithFilter, formatMoney } = require("../../lib/ledger");
+const {
+  peopleBalances,
+  personSummary,
+  personReport,
+  listEntriesWithFilter,
+  formatMoney,
+} = require("../../lib/ledger");
 
 async function handler(req, res) {
   try {
@@ -39,11 +45,22 @@ async function handler(req, res) {
     }
 
     const summary = await personSummary({ userId, person });
+    const report = await personReport({ userId, person });
     const history = await listEntriesWithFilter({
       userId,
       limit: 200,
       filter: {
-        kind: { $in: ["person_in", "person_out"] },
+        kind: {
+          $in: [
+            "person_in",
+            "person_out",
+            "loan_given",
+            "loan_taken",
+            "fund_received",
+            "settlement_in",
+            "settlement_out",
+          ],
+        },
         person_key: person.toLowerCase(),
       },
     });
@@ -63,6 +80,17 @@ async function handler(req, res) {
               count: summary.count,
             }
           : null,
+        report: report
+          ? {
+              totalGiven: formatMoney(report.totalGiven),
+              totalTaken: formatMoney(report.totalTaken),
+              settledIn: formatMoney(report.settledIn),
+              settledOut: formatMoney(report.settledOut),
+              receivable: formatMoney(report.receivable),
+              payable: formatMoney(report.payable),
+              net: formatMoney(report.net),
+            }
+          : null,
         history,
       })
     );
@@ -75,4 +103,3 @@ async function handler(req, res) {
 
 module.exports = handler;
 module.exports.default = handler;
-

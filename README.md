@@ -102,3 +102,5 @@ curl "https://api.telegram.org/bot$BOT_TOKEN/getWebhookInfo"
 - AI parse flow: if details are missing, bot asks follow-up and waits for your next message before saving.
 - Pending follow-up state is stored in MongoDB collection `pending_transactions` and auto-expires.
 - UI/API AI parse endpoint: `POST /api/ai_parse` with `{ "text": "...", "save": true|false }`.
+- Settlement endpoint: `POST /api/ui_settlement` with `{ "person": "Shimul", "side": "receivable|payable", "amount": 500, "purpose": "partial return" }`.
+- Advanced lenden kinds supported: `loan_given`, `loan_taken`, `fund_received`, `settlement_in`, `settlement_out`.

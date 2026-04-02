@@ -68,13 +68,27 @@ async function handler(req, res) {
 
     if (req.method === "POST") {
       const kind = String((req.body && req.body.kind) || "").trim();
-      if (!["in", "out", "sub", "person_in", "person_out"].includes(kind)) {
+      if (
+        ![
+          "in",
+          "out",
+          "sub",
+          "person_in",
+          "person_out",
+          "loan_given",
+          "loan_taken",
+          "fund_received",
+          "settlement_in",
+          "settlement_out",
+        ].includes(kind)
+      ) {
         res.statusCode = 400;
         res.setHeader("content-type", "application/json; charset=utf-8");
         res.end(
           JSON.stringify({
             ok: false,
-            error: "kind must be in|out|sub|person_in|person_out",
+            error:
+              "kind must be in|out|sub|person_in|person_out|loan_given|loan_taken|fund_received|settlement_in|settlement_out",
           })
         );
         return;
@@ -89,7 +103,15 @@ async function handler(req, res) {
         return;
       }
 
-      const isPersonEntry = kind === "person_in" || kind === "person_out";
+      const isPersonEntry = [
+        "person_in",
+        "person_out",
+        "loan_given",
+        "loan_taken",
+        "fund_received",
+        "settlement_in",
+        "settlement_out",
+      ].includes(kind);
       const person = String((req.body && req.body.person) || "").trim();
       if (isPersonEntry && !person) {
         res.statusCode = 400;
@@ -97,6 +119,18 @@ async function handler(req, res) {
         res.end(JSON.stringify({ ok: false, error: "person is required" }));
         return;
       }
+
+      const purpose = String((req.body && req.body.purpose) || "").trim();
+      const sourceAccount = String(
+        (req.body && req.body.sourceAccount) || ""
+      ).trim();
+      const destinationAccount = String(
+        (req.body && req.body.destinationAccount) || ""
+      ).trim();
+      const jobId = String((req.body && req.body.jobId) || "").trim();
+      const settlementFor = String(
+        (req.body && req.body.settlementFor) || ""
+      ).trim();
 
       const createdAt = parseDateInput(req.body && req.body.date);
       if (
@@ -116,6 +150,11 @@ async function handler(req, res) {
         amount,
         note,
         person: isPersonEntry ? person : null,
+        purpose: purpose || null,
+        sourceAccount: sourceAccount || null,
+        destinationAccount: destinationAccount || null,
+        jobId: jobId || null,
+        settlementFor: settlementFor || null,
         rawText: null,
         createdAt: createdAt || undefined,
       });
@@ -131,6 +170,11 @@ async function handler(req, res) {
             amount: formatMoney(amount),
             note,
             person: isPersonEntry ? person : null,
+            purpose: purpose || null,
+            sourceAccount: sourceAccount || null,
+            destinationAccount: destinationAccount || null,
+            jobId: jobId || null,
+            settlementFor: settlementFor || null,
             date: createdAt ? createdAt.toISOString() : null,
           },
         })
