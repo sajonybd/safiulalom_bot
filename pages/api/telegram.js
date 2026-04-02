@@ -32,14 +32,12 @@ module.exports = async function handler(req, res) {
     res.statusCode = 200;
     res.end("OK");
   } catch (err) {
-    res.statusCode = 500;
-    res.setHeader("content-type", "application/json; charset=utf-8");
-    res.end(
-      JSON.stringify({
-        ok: false,
-        error: String(err && err.message ? err.message : err),
-      })
-    );
+    // IMPORTANT: Always return 200 to Telegram, otherwise Telegram will stop delivering updates
+    // and you'll see "Wrong response from the webhook" in getWebhookInfo.
+    // The actual error is logged to Vercel function logs for debugging.
+    // eslint-disable-next-line no-console
+    console.error("Telegram webhook error:", err);
+    res.statusCode = 200;
+    res.end("OK");
   }
 };
-
