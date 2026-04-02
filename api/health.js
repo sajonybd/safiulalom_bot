@@ -1,9 +1,4 @@
-const express = require("express");
+const { createHealthApp } = require("../lib/http_apps");
+const { vercelExpress } = require("../lib/vercel_express");
 
-const app = express();
-
-app.get("/", (_req, res) => {
-  res.json({ ok: true, service: "safiulalom_bot" });
-});
-
-module.exports = app;
+module.exports = vercelExpress(createHealthApp(), "/api/health");

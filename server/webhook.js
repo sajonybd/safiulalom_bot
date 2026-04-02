@@ -25,13 +25,22 @@ async function main() {
 
   // Same UI/API routes as Vercel, for local/VPS use.
   app.get("/", (_req, res) => res.redirect(302, "/api/ui"));
-  app.use("/api/ui", require("../api/ui"));
-  app.use("/api/ui_login", require("../api/ui_login"));
-  app.use("/api/ui_logout", require("../api/ui_logout"));
-  app.use("/api/ui_ledger", require("../api/ui_ledger"));
-  app.use("/api/ui_summary", require("../api/ui_summary"));
-  app.use("/api/health", require("../api/health"));
-  app.use("/api/telegram", require("../api/telegram"));
+  const {
+    createUiApp,
+    createUiLoginApp,
+    createUiLogoutApp,
+    createUiLedgerApp,
+    createUiSummaryApp,
+    createHealthApp,
+    createTelegramApp,
+  } = require("../lib/http_apps");
+  app.use("/api/ui", createUiApp());
+  app.use("/api/ui_login", createUiLoginApp());
+  app.use("/api/ui_logout", createUiLogoutApp());
+  app.use("/api/ui_ledger", createUiLedgerApp());
+  app.use("/api/ui_summary", createUiSummaryApp());
+  app.use("/api/health", createHealthApp());
+  app.use("/api/telegram", createTelegramApp());
 
   app.get("/health", (_req, res) =>
     res.json({ ok: true, service: "safiulalom_bot" })
