@@ -1,6 +1,8 @@
-# safiulalom_bot (Telegram + Vercel)
+# safiulalom_bot (Telegram + Next.js)
 
-This is a minimal Telegram bot that can run in two ways:
+This is a minimal Telegram bot + web UI built with Next.js.
+
+The bot supports:
 
 - **Long polling** (best for local dev / simple VPS, no public URL needed)
 - **Webhook** (best for Vercel or a VPS with a public HTTPS URL)
@@ -38,8 +40,7 @@ Set these in **Vercel → Project → Settings → Environment Variables**:
 ## 2.3) Web UI (public)
 
 - In Telegram, run `/ui` to get a one-time login code.
-- Open: `APP_URL/` (redirects to `/api/ui`)
-- Or open directly: `APP_URL/api/ui`
+- Open: `APP_URL/`
 - Enter your `Telegram ID` + the code to login.
 
 ## 3) Run locally (long polling)
@@ -51,26 +52,16 @@ cp .env.example .env
 npm run dev:poll
 ```
 
-## 4) Run on a VPS (webhook server)
+## 4) Run locally (web UI + API)
 
 ```bash
 npm i
 cp .env.example .env
-# edit .env to set BOT_TOKEN and WEBHOOK_SECRET (recommended)
-npm run start:webhook
+# edit .env to set MONGODB_URI and AUTH_SECRET
+npm run dev
 ```
 
-This starts:
-
-- `GET /health`
-- `POST /telegram?secret=WEBHOOK_SECRET`
-
-Then set Telegram webhook (one-time):
-
-```bash
-curl -X POST "https://api.telegram.org/bot$BOT_TOKEN/setWebhook" \
-  -d "url=https://YOUR-DOMAIN.com/telegram?secret=$WEBHOOK_SECRET"
-```
+Open `http://localhost:3000/`.
 
 ## 5) Deploy to Vercel
 
@@ -78,10 +69,11 @@ Push this repo to GitHub/GitLab/Bitbucket and import it in Vercel.
 
 After deploy you will have:
 
+- `GET /` → web UI
 - `GET /api/health` → health check
 - `POST /api/telegram?secret=WEBHOOK_SECRET` → Telegram webhook target
 
-## 6) Set Telegram webhook for Vercel (one-time)
+## 6) Set Telegram webhook (one-time)
 
 After you know your deployed URL:
 

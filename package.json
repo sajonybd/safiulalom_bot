@@ -5,17 +5,20 @@
   "license": "MIT",
   "main": "api/telegram.js",
   "scripts": {
-    "dev": "npx vercel dev",
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
     "dev:poll": "node scripts/polling.js",
-    "start:webhook": "node server/webhook.js",
-    "lint": "node -c api/telegram.js && node -c api/health.js && node -c api/ui.js && node -c api/ui_login.js && node -c api/ui_logout.js && node -c api/ui_ledger.js && node -c api/ui_summary.js && node -c lib/bot.js && node -c lib/auth.js && node -c lib/db.js && node -c lib/ledger.js && node -c lib/session.js && node -c lib/ui_login.js && node -c lib/users.js && node -c lib/http_apps.js && node -c lib/vercel_express.js && node -c scripts/polling.js && node -c server/webhook.js"
+    "lint": "node -c lib/bot.js && node -c lib/auth.js && node -c lib/db.js && node -c lib/ledger.js && node -c lib/session.js && node -c lib/ui_login.js && node -c lib/users.js && node -c scripts/polling.js && node -c pages/index.js && node -c pages/api/telegram.js && node -c pages/api/health.js && node -c pages/api/ui_login.js && node -c pages/api/ui_logout.js && node -c pages/api/ui_ledger.js && node -c pages/api/ui_summary.js"
   },
   "engines": {
     "node": "20.x"
   },
   "dependencies": {
-    "express": "^4.21.2",
     "mongodb": "^6.16.0",
+    "next": "^15.3.0",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1",
     "telegraf": "^4.16.3"
   }
 }
