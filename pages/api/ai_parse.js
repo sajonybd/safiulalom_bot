@@ -7,8 +7,8 @@ const {
 } = require("../../lib/temp_transaction");
 const { addEntry } = require("../../lib/ledger");
 
-function mapDebtKindFromNote(note) {
-  const text = String(note || "").toLowerCase();
+function mapDebtKindFromNote(note, metadataPurpose) {
+  const text = `${String(note || "")} ${String(metadataPurpose || "")}`.toLowerCase();
   if (
     text.includes("pabe") ||
     text.includes("owe me") ||
@@ -21,9 +21,18 @@ function mapDebtKindFromNote(note) {
 
 function mapParsedToLedger(parsed) {
   const category = String(parsed.category || "").toLowerCase();
-  const noteBase = parsed.note || "";
-  const note = [parsed.category, noteBase].filter(Boolean).join(" | ");
-  const person = parsed.entity || null;
+  const noteBase = parsed.note || parsed.summary || "";
+  const note = [
+    parsed.category,
+    parsed.metadata && parsed.metadata.purpose ? parsed.metadata.purpose : "",
+    noteBase,
+  ]
+    .filter(Boolean)
+    .join(" | ");
+  const person =
+    parsed.entity && typeof parsed.entity === "object"
+      ? parsed.entity.name
+      : parsed.entity;
 
   if (parsed.type === "IN") {
     return {
@@ -36,10 +45,21 @@ function mapParsedToLedger(parsed) {
 
   if (parsed.type === "DEBT") {
     return {
-      kind: mapDebtKindFromNote(note),
+      kind: mapDebtKindFromNote(note, parsed.metadata && parsed.metadata.purpose),
       person: person || "Unknown",
       amount: parsed.amount,
       note: note || "AI parsed debt",
+    };
+  }
+
+  if (parsed.type === "TRANSFER") {
+    const src = parsed.sourceAccount || "Unknown source";
+    const dst = parsed.destinationAccount || "Unknown destination";
+    return {
+      kind: "out",
+      person: null,
+      amount: parsed.amount,
+      note: `Transfer | ${src} -> ${dst}${note ? ` | ${note}` : ""}`,
     };
   }
 
@@ -169,4 +189,3 @@ async function handler(req, res) {
 
 module.exports = handler;
 module.exports.default = handler;
-

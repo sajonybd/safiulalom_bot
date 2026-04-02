@@ -100,3 +100,5 @@ curl "https://api.telegram.org/bot$BOT_TOKEN/getWebhookInfo"
 
 - Telegram **cannot** send webhooks to plain `localhost`. Use polling locally, or use a public HTTPS tunnel.
 - AI parse flow: if details are missing, bot asks follow-up and waits for your next message before saving.
+- Pending follow-up state is stored in MongoDB collection `pending_transactions` and auto-expires.
+- UI/API AI parse endpoint: `POST /api/ai_parse` with `{ "text": "...", "save": true|false }`.
