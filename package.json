@@ -9,7 +9,7 @@
     "build": "next build",
     "start": "next start",
     "dev:poll": "node scripts/polling.js",
-    "lint": "node -c lib/bot.js && node -c lib/auth.js && node -c lib/db.js && node -c lib/ledger.js && node -c lib/session.js && node -c lib/ui_login.js && node -c lib/users.js && node -c scripts/polling.js && node -c pages/index.js && node -c pages/api/telegram.js && node -c pages/api/health.js && node -c pages/api/ui_login.js && node -c pages/api/ui_logout.js && node -c pages/api/ui_ledger.js && node -c pages/api/ui_summary.js && node -c pages/api/ui_people.js"
+    "lint": "node -c lib/bot.js && node -c lib/auth.js && node -c lib/db.js && node -c lib/ledger.js && node -c lib/session.js && node -c lib/ui_login.js && node -c lib/users.js && node -c lib/ai_finance.js && node -c lib/temp_transaction.js && node -c scripts/polling.js && node -c pages/index.js && node -c pages/api/telegram.js && node -c pages/api/health.js && node -c pages/api/ui_login.js && node -c pages/api/ui_logout.js && node -c pages/api/ui_ledger.js && node -c pages/api/ui_summary.js && node -c pages/api/ui_people.js && node -c pages/api/ai_parse.js"
   },
   "engines": {
     "node": "20.x"

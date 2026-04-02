@@ -22,6 +22,9 @@ Set these in **Vercel → Project → Settings → Environment Variables**:
 - `ADMIN_USER_IDS` (recommended) — comma separated Telegram user ids allowed to use the bot
 - `APP_URL` (recommended) — your deployed base URL (used by `/ui` command)
 - `AUTH_SECRET` (required for UI login) — random secret used to secure one-time UI login codes
+- `GEMINI_API_KEY` (required for AI shorthand parse)
+- `GEMINI_MODEL` (optional, default `gemini-2.0-flash`)
+- `ADMIN_USER_IDS` (optional) — comma separated Telegram user ids if you want private bot
 
 ## 2.1) Find your Telegram user id
 
@@ -29,12 +32,14 @@ Set these in **Vercel → Project → Settings → Environment Variables**:
 
 ## 2.2) Ledger commands
 
-- `/in 500 gazi theke nilam` (income)
+- `/in 500 omuk theke nilam` (income)
 - `/out 295 bajar` (expense)
 - `/sub 999 Netflix` (subscription expense)
 - `/person_out Ma 500 medicine` (I gave Ma, so I should get)
 - `/person_in Vaiya 1200 groceries` (Vaiya gave me, so I should pay)
 - `/person_summary Ma` (person-wise balance + recent history)
+- Natural language (no command): `1000 bajar @Ma #House2`, `vaiya 500 dilo`, etc.
+- `/ai_cancel` (cancel pending follow-up question)
 - `/list 10` (recent entries)
 - `/summary` (this month)
 - `/edit <id> 300 updated note`
@@ -94,3 +99,4 @@ curl "https://api.telegram.org/bot$BOT_TOKEN/getWebhookInfo"
 ## Notes
 
 - Telegram **cannot** send webhooks to plain `localhost`. Use polling locally, or use a public HTTPS tunnel.
+- AI parse flow: if details are missing, bot asks follow-up and waits for your next message before saving.
