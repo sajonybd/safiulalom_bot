@@ -1,6 +1,9 @@
 # safiulalom_bot (Telegram + Vercel)
 
-This is a minimal Telegram bot using **webhooks** so it can run on **Vercel Serverless Functions**.
+This is a minimal Telegram bot that can run in two ways:
+
+- **Long polling** (best for local dev / simple VPS, no public URL needed)
+- **Webhook** (best for Vercel or a VPS with a public HTTPS URL)
 
 ## 1) Prerequisites
 
@@ -14,7 +17,37 @@ Set these in **Vercel → Project → Settings → Environment Variables**:
 - `BOT_TOKEN` (required) — from @BotFather
 - `WEBHOOK_SECRET` (recommended) — any random string (prevents random POSTs)
 
-## 3) Deploy
+## 3) Run locally (long polling)
+
+```bash
+npm i
+cp .env.example .env
+# edit .env to set BOT_TOKEN (WEBHOOK_SECRET not required for polling)
+npm run dev:poll
+```
+
+## 4) Run on a VPS (webhook server)
+
+```bash
+npm i
+cp .env.example .env
+# edit .env to set BOT_TOKEN and WEBHOOK_SECRET (recommended)
+npm run start:webhook
+```
+
+This starts:
+
+- `GET /health`
+- `POST /telegram?secret=WEBHOOK_SECRET`
+
+Then set Telegram webhook (one-time):
+
+```bash
+curl -X POST "https://api.telegram.org/bot$BOT_TOKEN/setWebhook" \
+  -d "url=https://YOUR-DOMAIN.com/telegram?secret=$WEBHOOK_SECRET"
+```
+
+## 5) Deploy to Vercel
 
 Push this repo to GitHub/GitLab/Bitbucket and import it in Vercel.
 
@@ -23,7 +56,7 @@ After deploy you will have:
 - `GET /api/health` → health check
 - `POST /api/telegram?secret=WEBHOOK_SECRET` → Telegram webhook target
 
-## 4) Set Telegram webhook (one-time)
+## 6) Set Telegram webhook for Vercel (one-time)
 
 After you know your deployed URL:
 
@@ -38,16 +71,6 @@ To verify:
 curl "https://api.telegram.org/bot$BOT_TOKEN/getWebhookInfo"
 ```
 
-## 5) Local dev (optional)
+## Notes
 
-```bash
-npm i
-npx vercel dev
-```
-
-Then you can hit:
-
-```bash
-curl http://localhost:3000/api/health
-```
-
+- Telegram **cannot** send webhooks to plain `localhost`. Use polling locally, or use a public HTTPS tunnel.

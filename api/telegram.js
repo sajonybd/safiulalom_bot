@@ -1,10 +1,4 @@
-const { Telegraf } = require("telegraf");
-
-function requiredEnv(name) {
-  const value = process.env[name];
-  if (!value) throw new Error(`Missing env var: ${name}`);
-  return value;
-}
+const { getBot } = require("../lib/bot");
 
 async function readJson(req) {
   const chunks = [];
@@ -12,22 +6,6 @@ async function readJson(req) {
   const raw = Buffer.concat(chunks).toString("utf8").trim();
   if (!raw) return null;
   return JSON.parse(raw);
-}
-
-let cachedBot;
-function getBot() {
-  if (cachedBot) return cachedBot;
-
-  const botToken = requiredEnv("BOT_TOKEN");
-  const bot = new Telegraf(botToken);
-
-  bot.start((ctx) =>
-    ctx.reply("Assalamu alaikum! I am safiulalom_bot. Send me any message.")
-  );
-  bot.on("text", (ctx) => ctx.reply(`You said: ${ctx.message.text}`));
-
-  cachedBot = bot;
-  return bot;
 }
 
 module.exports = async function handler(req, res) {
@@ -70,4 +48,3 @@ module.exports = async function handler(req, res) {
     res.end(JSON.stringify({ ok: false, error: String(err && err.message ? err.message : err) }));
   }
 };
-
