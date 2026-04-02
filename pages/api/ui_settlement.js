@@ -17,6 +17,9 @@ async function handler(req, res) {
       return;
     }
 
+    const { getFamilyId } = require("../../lib/users");
+    const familyId = await getFamilyId(userId);
+
     const person = String((req.body && req.body.person) || "").trim();
     const amount = parseAmount(req.body && req.body.amount);
     const side = String((req.body && req.body.side) || "").trim().toLowerCase();
@@ -41,6 +44,7 @@ async function handler(req, res) {
     const kind = side === "receivable" ? "settlement_in" : "settlement_out";
     const { id } = await addEntry({
       userId,
+      familyId,
       chatId: null,
       kind,
       amount,
@@ -54,7 +58,7 @@ async function handler(req, res) {
       rawText: null,
     });
 
-    const report = await personReport({ userId, person });
+    const report = await personReport({ familyId, person });
     res.statusCode = 200;
     res.setHeader("content-type", "application/json; charset=utf-8");
     res.end(

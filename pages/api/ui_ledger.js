@@ -1,4 +1,4 @@
-const { getSessionUserId } = require("../../lib/session");
+const { getFamilyId } = require("../../lib/users");
 const {
   parseAmount,
   parseDateInput,
@@ -26,6 +26,8 @@ async function handler(req, res) {
       return;
     }
 
+    const familyId = await getFamilyId(userId);
+
     if (req.method === "GET") {
       const scope = String((req.query && req.query.scope) || "all").trim();
       const person = String((req.query && req.query.person) || "").trim();
@@ -37,7 +39,7 @@ async function handler(req, res) {
       let entries;
       if (scope === "person" && person) {
         entries = await listEntriesWithFilter({
-          userId,
+          familyId,
           limit,
           filter: {
             kind: { $in: ["person_in", "person_out"] },
@@ -46,18 +48,18 @@ async function handler(req, res) {
         });
       } else if (scope === "person") {
         entries = await listEntriesWithFilter({
-          userId,
+          familyId,
           limit,
           filter: { kind: { $in: ["person_in", "person_out"] } },
         });
       } else if (scope === "general") {
         entries = await listEntriesWithFilter({
-          userId,
+          familyId,
           limit,
           filter: { kind: { $in: ["in", "out", "sub"] } },
         });
       } else {
-        entries = await listEntries({ userId, limit });
+        entries = await listEntries({ familyId, limit });
       }
 
       res.statusCode = 200;
@@ -145,6 +147,7 @@ async function handler(req, res) {
 
       const { id } = await addEntry({
         userId,
+        familyId,
         chatId: null,
         kind,
         amount,
@@ -239,7 +242,7 @@ async function handler(req, res) {
       }
 
       const result = await updateEntry({
-        userId,
+        familyId,
         id,
         amount,
         note,
@@ -261,7 +264,7 @@ async function handler(req, res) {
         return;
       }
 
-      const result = await deleteEntry({ userId, id });
+      const result = await deleteEntry({ familyId, id });
       res.statusCode = result.deleted ? 200 : 404;
       res.setHeader("content-type", "application/json; charset=utf-8");
       res.end(JSON.stringify({ ok: result.deleted }));

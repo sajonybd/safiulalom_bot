@@ -23,9 +23,12 @@ async function handler(req, res) {
       return;
     }
 
+    const { getFamilyId } = require("../../lib/users");
+    const familyId = await getFamilyId(userId);
+
     const person = String((req.query && req.query.person) || "").trim();
     if (!person) {
-      const people = await peopleBalances({ userId });
+      const people = await peopleBalances({ familyId });
       res.statusCode = 200;
       res.setHeader("content-type", "application/json; charset=utf-8");
       res.end(
@@ -44,10 +47,10 @@ async function handler(req, res) {
       return;
     }
 
-    const summary = await personSummary({ userId, person });
-    const report = await personReport({ userId, person });
+    const summary = await personSummary({ familyId, person });
+    const report = await personReport({ familyId, person });
     const history = await listEntriesWithFilter({
-      userId,
+      familyId,
       limit: 200,
       filter: {
         kind: {

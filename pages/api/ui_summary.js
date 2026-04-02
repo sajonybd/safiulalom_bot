@@ -1,5 +1,5 @@
 const { getSessionUserId } = require("../../lib/session");
-const { summary, totalsAllTime, formatMoney } = require("../../lib/ledger");
+const { summary, totalsAllTime, accountsBalances, formatMoney } = require("../../lib/ledger");
 
 function monthRange(d = new Date()) {
   const from = new Date(d.getFullYear(), d.getMonth(), 1, 0, 0, 0, 0);
@@ -23,10 +23,14 @@ async function handler(req, res) {
       return;
     }
 
+    const { getFamilyId } = require("../../lib/users");
+    const familyId = await getFamilyId(userId);
+
     const { from, to } = monthRange(new Date());
-    const [s, all] = await Promise.all([
-      summary({ userId, from, to }),
-      totalsAllTime({ userId }),
+    const [s, all, accs] = await Promise.all([
+      summary({ familyId, from, to }),
+      totalsAllTime({ familyId }),
+      accountsBalances({ familyId }),
     ]);
     res.statusCode = 200;
     res.setHeader("content-type", "application/json; charset=utf-8");
@@ -49,6 +53,7 @@ async function handler(req, res) {
           net: formatMoney(all.net),
           counts: all.counts,
         },
+        accounts: accs,
       })
     );
   } catch (err) {
