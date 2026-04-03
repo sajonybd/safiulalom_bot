@@ -16,8 +16,18 @@ interface SettingsContextType {
 const SettingsContext = createContext<SettingsContextType | undefined>(undefined);
 
 export const SettingsProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [language, setLanguageState] = useState<Language>("en");
-  const [currency, setCurrencyState] = useState<Currency>("BDT");
+  const [language, setLanguageState] = useState<Language>(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("settings_language") as Language) || "en";
+    }
+    return "en";
+  });
+  const [currency, setCurrencyState] = useState<Currency>(() => {
+    if (typeof window !== "undefined") {
+      return (localStorage.getItem("settings_currency") as Currency) || "BDT";
+    }
+    return "BDT";
+  });
 
   // Load from local storage
   useEffect(() => {

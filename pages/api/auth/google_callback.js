@@ -1,5 +1,6 @@
 const { createSession, buildSessionCookie } = require("../../../lib/session");
 const { getDb } = require("../../../lib/db");
+const { ensureDefaultEntities } = require("../../../lib/entities");
 const crypto = require("crypto");
 
 function hashStringToSafeInteger(str) {
@@ -67,6 +68,8 @@ async function handler(req, res) {
         $setOnInsert: { created_at: new Date() },
         $set: {
           telegram_user_id: userId,
+          family_id: String(userId),
+          active_family_id: String(userId),
           provider: "google",
           email: profileData.email,
           first_name: profileData.given_name || profileData.name || null,
@@ -76,6 +79,9 @@ async function handler(req, res) {
       },
       { upsert: true }
     );
+    
+    // Ensure default entities
+    await ensureDefaultEntities({ userId, familyId: String(userId) }).catch(() => {});
 
     // 4. Create Session
     const token = await createSession({ userId: userId });

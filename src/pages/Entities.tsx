@@ -159,11 +159,11 @@ export default function Entities() {
               {/* Dynamic Placeholders based on type */}
               {(() => {
                 const p = {
-                  PERSON: { name: "e.g. Safiul Alom, Hujyfa", sub: "e.g. Wife, Brother, Friend", grp: "e.g. Family, Work" },
-                  ORGANIZATION: { name: "e.g. Meena Bazar, Pharmacy", sub: "e.g. Groceries, Medicine", grp: "e.g. Sector 4, Market" },
-                  ACCOUNT: { name: "e.g. bKash, Cash, City Bank", sub: "e.g. Wallet, Savings, Business", grp: "e.g. Personal, Shop 1" },
-                  UTILITY: { name: "e.g. DESCO, WASA, Titas Gas", sub: "e.g. Electricity, Water, Bill", grp: "e.g. House 1, Office" },
-                  ASSET: { name: "e.g. Bike FZ-V3, Toyota Corolla", sub: "e.g. Bike, Car, Gadget", grp: "e.g. Personal, Business" }
+                  PERSON: { name: t("placeholder_person_name"), sub: t("placeholder_person_sub"), grp: t("placeholder_person_grp") },
+                  ORGANIZATION: { name: t("placeholder_org_name"), sub: t("placeholder_org_sub"), grp: t("placeholder_org_grp") },
+                  ACCOUNT: { name: t("placeholder_acc_name"), sub: t("placeholder_acc_sub"), grp: t("placeholder_acc_grp") },
+                  UTILITY: { name: t("placeholder_util_name"), sub: t("placeholder_util_sub"), grp: t("placeholder_util_grp") },
+                  ASSET: { name: t("placeholder_asset_name"), sub: t("placeholder_asset_sub"), grp: t("placeholder_asset_grp") }
                 }[formData.type] || { name: "e.g. Name", sub: "e.g. Sub-type", grp: "e.g. Group" };
 
                 return (

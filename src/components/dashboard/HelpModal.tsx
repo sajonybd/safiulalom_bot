@@ -6,6 +6,7 @@ import {
   DialogDescription,
 } from "@/components/ui/dialog";
 import { Info, ArrowRight, Wallet, Users, LayoutDashboard } from "lucide-react";
+import { useSettings } from "@/contexts/SettingsContext";
 
 interface HelpModalProps {
   open: boolean;
@@ -13,16 +14,17 @@ interface HelpModalProps {
 }
 
 export function HelpModal({ open, onOpenChange }: HelpModalProps) {
+  const { t } = useSettings();
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-xl">
             <Info className="w-5 h-5 text-primary" />
-            Transaction Guide & Docs
+            {t("help_guide_title")}
           </DialogTitle>
           <DialogDescription>
-            Learn how to manage your transactions, accounts, and lending (Lenden) effectively.
+            {t("help_guide_desc")}
           </DialogDescription>
         </DialogHeader>
 
@@ -30,19 +32,17 @@ export function HelpModal({ open, onOpenChange }: HelpModalProps) {
           {/* Section: Accounts Logic */}
           <section className="space-y-3">
             <h3 className="text-sm font-bold flex items-center gap-2 text-foreground">
-              <Wallet className="w-4 h-4" /> Account Flow (Source vs Destination)
+              <Wallet className="w-4 h-4" /> {t("help_acc_flow")}
             </h3>
             <div className="bg-muted/50 p-3 rounded-lg border border-border text-xs leading-relaxed space-y-2">
               <p>
-                <strong className="text-primary underline">Source Account:</strong> The wallet or bank account where the money is coming <span className="font-bold">FROM</span>. Use this when you are spending or transferring money.
+                <strong className="text-primary underline">Source Account:</strong> {t("help_source_desc")}
               </p>
               <p>
-                <strong className="text-primary underline">Destination Account:</strong> The wallet or bank account where the money is going <span className="font-bold">TO</span>. Use this when you are receiving or transferring money.
+                <strong className="text-primary underline">Destination Account:</strong> {t("help_dest_desc")}
               </p>
               <div className="flex items-center gap-2 mt-2 pt-2 border-t border-border/50 text-[10px] text-muted-foreground italic">
-                <span>Example: Cash (Source)</span>
-                <ArrowRight className="w-3 h-3" />
-                <span>Bkash (Dest) = You put cash into your Bkash.</span>
+                <span>{t("help_example_transfer")}</span>
               </div>
             </div>
           </section>
@@ -50,24 +50,24 @@ export function HelpModal({ open, onOpenChange }: HelpModalProps) {
           {/* Section: Transaction Types */}
           <section className="space-y-3">
             <h3 className="text-sm font-bold flex items-center gap-2 text-foreground">
-              <LayoutDashboard className="w-4 h-4" /> Transaction Types
+              <LayoutDashboard className="w-4 h-4" /> {t("help_types_title")}
             </h3>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
               <div className="p-3 bg-card border border-border rounded-lg space-y-1">
-                <p className="text-xs font-bold text-primary">Income</p>
-                <p className="text-[11px] text-muted-foreground">General money coming in (Salary, Gift, etc.). Increases account balance.</p>
+                <p className="text-xs font-bold text-primary">{t("income")}</p>
+                <p className="text-[11px] text-muted-foreground">{t("help_income_desc")}</p>
               </div>
               <div className="p-3 bg-card border border-border rounded-lg space-y-1">
-                <p className="text-xs font-bold text-destructive">Expense</p>
-                <p className="text-[11px] text-muted-foreground">General money spent (Food, Rent, etc.). Decreases account balance.</p>
+                <p className="text-xs font-bold text-destructive">{t("expense")}</p>
+                <p className="text-[11px] text-muted-foreground">{t("help_expense_desc")}</p>
               </div>
               <div className="p-3 bg-card border border-border rounded-lg space-y-1">
-                <p className="text-xs font-bold text-blue-500">Transfer</p>
-                <p className="text-[11px] text-muted-foreground">Moving money between your own accounts. No net change in wealth.</p>
+                <p className="text-xs font-bold text-blue-500">{t("transfer")}</p>
+                <p className="text-[11px] text-muted-foreground">{t("help_transfer_desc")}</p>
               </div>
               <div className="p-3 bg-card border border-border rounded-lg space-y-1">
-                <p className="text-xs font-bold text-orange-500">Settlement</p>
-                <p className="text-[11px] text-muted-foreground">Paying back a debt or receiving a repayment. Closes a receivable/payable.</p>
+                <p className="text-xs font-bold text-orange-500">{t("settle")}</p>
+                <p className="text-[11px] text-muted-foreground">{t("help_settle_desc")}</p>
               </div>
             </div>
           </section>
@@ -75,29 +75,29 @@ export function HelpModal({ open, onOpenChange }: HelpModalProps) {
           {/* Section: Lenden / Lending */}
           <section className="space-y-3">
             <h3 className="text-sm font-bold flex items-center gap-2 text-foreground">
-              <Users className="w-4 h-4" /> Receivable & Payable (Lenden)
+              <Users className="w-4 h-4" /> {t("help_lenden_title")}
             </h3>
             <div className="space-y-2">
               <div className="p-3 bg-accent/20 border border-border rounded-lg">
                 <p className="text-xs font-bold flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-primary" />
-                  Receivable (Lending Money)
+                  {t("help_receivable_title")}
                 </p>
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  You give money to someone. They owe you. This increases your <strong>Receivable</strong> total.
+                  {t("help_receivable_desc")}
                   <br />
-                  <span className="italic mt-1 block opacity-70">Types: Person Out, Loan Given.</span>
+                  <span className="italic mt-1 block opacity-70">{t("help_receivable_types")}</span>
                 </p>
               </div>
               <div className="p-3 bg-destructive/5 border border-border rounded-lg">
                 <p className="text-xs font-bold flex items-center gap-2">
                   <span className="w-2 h-2 rounded-full bg-destructive" />
-                  Payable (Borrowing Money)
+                  {t("help_payable_title")}
                 </p>
                 <p className="text-[11px] text-muted-foreground mt-1">
-                  You take money from someone. You owe them. This increases your <strong>Payable</strong> total.
+                  {t("help_payable_desc")}
                   <br />
-                  <span className="italic mt-1 block opacity-70">Types: Person In, Loan Taken, Fund Received.</span>
+                  <span className="italic mt-1 block opacity-70">{t("help_payable_types")}</span>
                 </p>
               </div>
             </div>

@@ -13,7 +13,7 @@ export default function SpaRoute() {
   return (
     <>
       <Head>
-        <title>Safiul Alom - Flow Nest</title>
+        <title>Life-OS | Personal Assistant</title>
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
       </Head>
       <App />

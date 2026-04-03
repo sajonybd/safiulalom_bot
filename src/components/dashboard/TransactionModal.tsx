@@ -174,7 +174,7 @@ export function TransactionModal({ open, onOpenChange, defaultValues }: Transact
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <div className="flex items-center gap-2">
             <DialogTitle>{isEdit ? t("edit_transaction") : t("add_transaction")}</DialogTitle>

@@ -1,9 +1,9 @@
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { Shield, Plus, MoreVertical, UserCheck, Eye, Edit, Loader2, UserPlus } from "lucide-react";
+import { Shield, Plus, MoreVertical, UserCheck, Eye, Edit, Loader2, UserPlus, Check, X, SwitchCamera } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useSettings } from "@/contexts/SettingsContext";
-import { useTeam, useInviteMember, useUpdateMemberRole } from "@/hooks/useTeam";
+import { useTeam, useInviteMember, useUpdateMemberRole, useTeamAction } from "@/hooks/useTeam";
 import { useState } from "react";
 import {
   Dialog,
@@ -34,10 +34,16 @@ const Team = () => {
   const { data, isLoading } = useTeam();
   const inviteMember = useInviteMember();
   const updateRole = useUpdateMemberRole();
+  const teamAction = useTeamAction();
   const [inviteOpen, setInviteOpen] = useState(false);
   const [telegramId, setTelegramId] = useState("");
 
   const members = data?.team || [];
+  const myFamilies = data?.myFamilies || [];
+  const activeFamilyId = data?.activeFamilyId;
+
+  const pendingInvitations = myFamilies.filter((f: any) => f.status === "PENDING");
+  const acceptedFamilies = myFamilies.filter((f: any) => f.status === "ACCEPTED");
 
   const roles = [
     { role: 'OWNER', desc: t('owner_desc'), count: members.filter((m: any) => m.role === 'OWNER').length },
@@ -60,9 +66,15 @@ const Team = () => {
     } catch (err) {}
   };
 
+  const handleAction = async (action: 'ACCEPT_INVITATION' | 'REJECT_INVITATION' | 'SWITCH_TEAM', familyId: string) => {
+    try {
+      await teamAction.mutateAsync({ action, familyId });
+    } catch (err) {}
+  };
+
   return (
     <DashboardLayout>
-    <div className="p-4 lg:p-6 space-y-5 max-w-7xl">
+    <div className="p-4 lg:p-6 space-y-8 max-w-7xl">
       <div className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-bold text-foreground">{t("team")}</h2>
@@ -71,6 +83,57 @@ const Team = () => {
         <Button size="sm" className="gap-1.5" onClick={() => setInviteOpen(true)}>
           <Plus className="w-4 h-4" /> {t("invite_member")}
         </Button>
+      </div>
+
+      {/* Pending Invitations Section */}
+      {pendingInvitations.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+            <UserPlus className="w-4 h-4 text-primary" /> {t("pending_invitations")}
+          </h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {pendingInvitations.map((inv: any) => (
+              <div key={inv.family_id} className="rounded-xl border border-primary/20 bg-primary/5 p-4 flex items-center justify-between">
+                <div>
+                  <p className="text-sm font-medium text-foreground">{inv.name || 'Shared Team'}</p>
+                  <p className="text-xs text-muted-foreground">{t("invited_as")} {inv.role}</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-destructive hover:bg-destructive/10" onClick={() => handleAction('REJECT_INVITATION', inv.family_id)}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                  <Button size="icon" variant="ghost" className="h-8 w-8 text-primary hover:bg-primary/10" onClick={() => handleAction('ACCEPT_INVITATION', inv.family_id)}>
+                    <Check className="w-4 h-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* My Teams Switcher Section */}
+      <div className="space-y-3">
+        <h3 className="text-sm font-semibold text-foreground flex items-center gap-2">
+          <SwitchCamera className="w-4 h-4 text-primary" /> {t("my_teams_profiles")}
+        </h3>
+        <div className="flex flex-wrap gap-3">
+          {acceptedFamilies.map((fam: any) => (
+            <button
+              key={fam.family_id}
+              onClick={() => handleAction('SWITCH_TEAM', fam.family_id)}
+              className={`px-4 py-2 rounded-xl text-xs font-medium border transition-all flex items-center gap-2 ${
+                fam.family_id === activeFamilyId 
+                ? 'bg-primary border-primary text-primary-foreground shadow-sm' 
+                : 'bg-card border-border text-foreground hover:border-primary/50'
+              }`}
+            >
+              <div className={`w-1.5 h-1.5 rounded-full ${fam.family_id === activeFamilyId ? 'bg-primary-foreground' : 'bg-muted-foreground'}`} />
+              {t(fam.name) || fam.name || (fam.family_id === activeFamilyId ? 'Active Team' : 'Switch Team')}
+              {fam.role === 'OWNER' && <Shield className="w-3 h-3 ml-0.5 opacity-70" />}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Invite Member Dialog */}
@@ -98,7 +161,7 @@ const Team = () => {
             <Button variant="outline" onClick={() => setInviteOpen(false)}>{t("cancel")}</Button>
             <Button onClick={handleInvite} disabled={inviteMember.isPending || !telegramId}>
               {inviteMember.isPending ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <UserPlus className="w-4 h-4 mr-2" />}
-              {t("add_to_team")}
+              {t("send_invitation")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -113,7 +176,7 @@ const Team = () => {
               <h4 className="text-sm font-semibold text-foreground uppercase">{r.role}</h4>
             </div>
             <p className="text-xs text-muted-foreground">{r.desc}</p>
-            <p className="text-xs text-muted-foreground mt-2">{r.count} {t("member")}(s)</p>
+            <p className="text-xs text-muted-foreground mt-2">{r.count} {t("member")}</p>
           </div>
         ))}
       </div>
