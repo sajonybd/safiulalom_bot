@@ -22,9 +22,16 @@ async function handler(req, res) {
     // Create session for the verified user
     const sessionToken = await createSession({ userId: telegramUserId });
     
-    // Set cookie and navigate
+    // Set cookie
     res.setHeader("set-cookie", buildSessionCookie(sessionToken));
-    res.redirect(302, "/");
+
+    if (req.headers.accept && req.headers.accept.includes("application/json")) {
+      res.statusCode = 200;
+      res.setHeader("content-type", "application/json; charset=utf-8");
+      res.end(JSON.stringify({ ok: true, redirect: "/" }));
+    } else {
+      res.redirect(302, "/");
+    }
   } catch (err) {
     console.error("Token Login Error:", err);
     res.statusCode = 500;

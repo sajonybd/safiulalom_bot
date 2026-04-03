@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -15,6 +15,36 @@ export default function Login() {
   const [telegramId, setTelegramId] = useState("");
   const [telegramCode, setTelegramCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [tokenAttempted, setTokenAttempted] = useState(false);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+    if (token && !tokenAttempted) {
+      setTokenAttempted(true);
+      autoTokenLogin(token);
+    }
+  }, []);
+
+  const autoTokenLogin = async (token: string) => {
+    setIsLoading(true);
+    try {
+      const res = await fetch(`/api/auth/token_login?token=${token}`, {
+        headers: { "Accept": "application/json" }
+      });
+      const data = await res.json();
+      if (data.ok) {
+        toast.success(t("login_success"));
+        window.location.href = data.redirect || "/";
+      } else {
+        toast.error(t("login_failed") + ": token is invalid or expired.");
+      }
+    } catch (err) {
+      toast.error(t("login_failed"));
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const handleGoogleLogin = () => {
     window.location.href = "/api/auth/google";
