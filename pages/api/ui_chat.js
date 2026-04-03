@@ -1,8 +1,8 @@
 const { getDb } = require("../../lib/db");
 const { getSessionUserId } = require("../../lib/session");
-const { generateAssistantResponse, parseFinanceText, normalizeParsed } = require("../../lib/ai_finance");
-const { addPendingEntry } = require("../../lib/pending_entries");
+const { generateAssistantResponse, extractAction } = require("../../lib/ai_finance");
 const { getFamilyId } = require("../../lib/users");
+const { handleChatAction } = require("../../lib/chat_actions");
 
 export default async function handler(req, res) {
   if (req.method !== "POST" && req.method !== "GET" && req.method !== "DELETE") {
@@ -67,43 +67,36 @@ export default async function handler(req, res) {
     }));
 
     // 2. Generate AI response
-    const assistantReply = await generateAssistantResponse({
+    // 2. Generate AI response
+    const assistantReplyRaw = await generateAssistantResponse({
       userId,
       familyId,
       text,
       history: historyForAi,
     });
 
-    const isTransaction = assistantReply.includes("[TRANSACTION_DETECTED]");
-    const cleanReply = assistantReply.replace("[TRANSACTION_DETECTED]", "").trim();
+    // 3. Extract and execute action
+    const actionData = extractAction(assistantReplyRaw);
+    const cleanReply = assistantReplyRaw.replace(/<action>[\s\S]*?<\/action>/, "").trim();
 
-    let pendingResult = null;
-    if (isTransaction) {
-      // 3. If transaction detected, parse it
+    let actionResult = null;
+    if (actionData) {
       try {
-        const parsed = await parseFinanceText({ userId, text });
-        if (parsed && parsed.amount) {
-          // Save as pending entry
-          const { id } = await addPendingEntry({
-            userId,
-            source: "ui_chat",
-            rawText: text,
-            parsedData: {
-              ...parsed,
-              date: parsed.occurredAt ? new Date(parsed.occurredAt).toISOString() : new Date().toISOString(),
-            },
-          });
-          pendingResult = { id, parsed };
-        }
-      } catch (err) {
-        console.error("AI Parse error in UI Chat:", err);
+        actionResult = await handleChatAction({
+          userId,
+          familyId,
+          action: actionData.action,
+          params: actionData.params,
+        });
+      } catch (actionErr) {
+        console.error("Action execution failed:", actionErr);
+        actionResult = { ok: false, error: actionErr.message };
       }
     }
 
     // 4. Save messages to history
-    // Fix ordering: ensure assistant message is slightly after user message
     const userTime = new Date();
-    const assistantTime = new Date(userTime.getTime() + 100); // +100ms
+    const assistantTime = new Date(userTime.getTime() + 100);
 
     const userMsg = {
       user_id: userId,
@@ -118,9 +111,10 @@ export default async function handler(req, res) {
       role: "assistant",
       content: cleanReply,
       metadata: {
-        is_transaction: isTransaction,
-        pending_id: pendingResult ? pendingResult.id : null,
-        pending_data: pendingResult ? pendingResult.parsed : null, // Include data for UI preview
+        action: actionData ? actionData.action : null,
+        action_params: actionData ? actionData.params : null,
+        action_result: actionResult,
+        is_transaction: actionData?.action === "ADD_TRANSACTION",
       },
       created_at: assistantTime,
     };
@@ -130,8 +124,8 @@ export default async function handler(req, res) {
     return res.status(200).json({
       ok: true,
       reply: cleanReply,
-      isTransaction,
-      pending: pendingResult,
+      action: actionData ? actionData.action : null,
+      result: actionResult,
     });
   } catch (err) {
     console.error("Chat API error:", err);
