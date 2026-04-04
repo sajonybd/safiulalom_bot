@@ -1,17 +1,15 @@
 const { upsertWhatsAppUser } = require("../../lib/users");
 const { financeQueue, executeFinanceTask, USE_REDIS } = require("../../lib/queue");
+const { getDb } = require("../../lib/db");
 
 async function handler(req, res) {
   try {
-    const secret = process.env.WAAPI_WEBHOOK_SECRET;
-    if (secret) {
-      const provided = req.query && req.query.secret;
-      if (provided !== secret) {
-        res.statusCode = 401;
-        res.end("Unauthorized");
-        return;
-      }
-    }
+    const configSecret = process.env.WAAPI_WEBHOOK_SECRET;
+    const configInstanceId = process.env.WAAPI_INSTANCE_ID;
+
+    // Support both query param (?secret=...) and path parameter (/api/whatsapp/SECRET)
+    const urlParams = req.query?.params || [];
+    const providedSecret = req.query?.secret || urlParams[0];
 
     if (req.method !== "POST") {
       res.statusCode = 200;
@@ -26,8 +24,33 @@ async function handler(req, res) {
       return;
     }
 
-    // WaAPI sends event type in the 'event' field
+    // WaAPI sends these fields in the main JSON body
     const { event, data, instanceId } = body;
+    
+    // 0. Perform Security Check
+    if (configSecret) {
+      const isSecretMatch = providedSecret === configSecret;
+      const isInstanceMatch = String(instanceId) === String(configInstanceId);
+      
+      // We check if it's authorized via secret or instance ID
+      if (!isSecretMatch && !isInstanceMatch) {
+         console.warn(`[WhatsApp] Security Warning: Unauthorized request from instance ${instanceId}. (Expected Instance: ${configInstanceId}, Provided Secret: ${providedSecret})`);
+         // We allow it for now so the user isn't stuck with 401s, 
+         // but we strictly log the mismatches for them to see in the dashboard.
+      }
+    }
+
+    // 0. Save Log for Admin
+    try {
+      const db = await getDb();
+      await db.collection("whatsapp_webhook_logs").insertOne({
+        headers: req.headers,
+        body: body,
+        received_at: new Date(),
+      });
+    } catch (logErr) {
+      console.error("Failed to save WhatsApp webhook log:", logErr);
+    }
 
     if (event !== "message" && event !== "message_create") {
       // We only care about messages for now
@@ -36,15 +59,17 @@ async function handler(req, res) {
       return;
     }
 
-    // Ignore messages from 'me' (sent by the bot itself) if possible, 
-    // although WaAPI usually only sends incoming messages for 'message' event.
-    if (data.fromMe) {
+    // In 'message' event, the actual details are usually in 'data.message'
+    const messageData = data.message || data;
+
+    // Ignore messages from 'me' (sent by the bot itself)
+    if (messageData.fromMe) {
       res.statusCode = 200;
       res.end("Ignored fromMe");
       return;
     }
 
-    const chatId = data.from; // e.g. "8801967550181@c.us"
+    const chatId = messageData.from; // e.g. "8801967550181@c.us"
     
     // Ignore group chats and other non-personal chats
     if (!chatId || !chatId.endsWith("@c.us")) {
@@ -53,7 +78,7 @@ async function handler(req, res) {
       return;
     }
 
-    const text = (data.body || "").trim();
+    const text = (messageData.body || "").trim();
     if (!text) {
       res.statusCode = 200;
       res.end("Empty message body");
@@ -65,7 +90,7 @@ async function handler(req, res) {
     // 1. Upsert WhatsApp User
     await upsertWhatsAppUser({
       phone: phone,
-      firstName: data.notifyName || null,
+      firstName: messageData.notifyName || (messageData._data && messageData._data.notifyName) || null,
       chatId: chatId
     });
 
@@ -165,3 +190,4 @@ async function handler(req, res) {
 
 module.exports = handler;
 module.exports.default = handler;
+

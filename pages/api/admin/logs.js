@@ -13,9 +13,8 @@ export default async function handler(req, res) {
   }
 
   // Reuse the isAuthorized helper which checks ADMIN_USER_IDS
-  // We need to pass a context-like object or just the userId if we modify it
-  const adminIds = (process.env.ADMIN_USER_IDS || "").split(",").map(s => Number(s.trim()));
-  if (!adminIds.includes(Number(userId))) {
+  const adminIds = (process.env.ADMIN_USER_IDS || "").split(",").map(s => s.trim());
+  if (!adminIds.includes(String(userId))) {
     return res.status(403).json({ ok: false, error: "Forbidden: Admins only" });
   }
 
@@ -36,10 +35,18 @@ export default async function handler(req, res) {
       .limit(100)
       .toArray();
 
+    // Fetch last 100 WhatsApp webhook logs
+    const whatsappLogs = await db.collection("whatsapp_webhook_logs")
+      .find({})
+      .sort({ received_at: -1 })
+      .limit(100)
+      .toArray();
+
     return res.status(200).json({
       ok: true,
       actionLogs,
-      chatMessages
+      chatMessages,
+      whatsappLogs
     });
   } catch (err) {
     console.error("Admin Logs API error:", err);

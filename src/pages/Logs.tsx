@@ -6,10 +6,10 @@ import { format } from "date-fns";
 import { Button } from "@/components/ui/button";
 
 export default function Logs() {
-  const [data, setData] = useState<{ actionLogs: any[]; chatMessages: any[] } | null>(null);
+  const [data, setData] = useState<{ actionLogs: any[]; chatMessages: any[]; whatsappLogs: any[] } | null>(null);
   const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"actions" | "chats" | "users">("users");
+  const [activeTab, setActiveTab] = useState<"actions" | "chats" | "users" | "whatsapp">("users");
   const [search, setSearch] = useState("");
   const [updating, setUpdating] = useState<number | null>(null);
   const [userFilter, setUserFilter] = useState<number | null>(null);
@@ -97,9 +97,14 @@ export default function Logs() {
   });
 
   const filteredChats = (data?.chatMessages || []).filter(m => {
-    const matchesUser = userFilter ? Number(m.user_id) === userFilter : true;
+    const matchesUser = userFilter ? String(m.user_id) === String(userFilter) : true;
     const matchesSearch = m.content?.toLowerCase().includes(search.toLowerCase()) || m.metadata?.raw_response?.toLowerCase().includes(search.toLowerCase());
     return matchesUser && matchesSearch;
+  });
+
+  const filteredWhatsAppLogs = (data?.whatsappLogs || []).filter(l => {
+    const matchesSearch = JSON.stringify(l).toLowerCase().includes(search.toLowerCase());
+    return matchesSearch;
   });
 
   const filteredUsers = users.filter(u => 
@@ -147,6 +152,7 @@ export default function Logs() {
           {[
             { id: "users", label: "User Management", icon: Users },
             { id: "chats", label: "Evidence & Chats", icon: MessageSquare },
+            { id: "whatsapp", label: "WhatsApp Webhooks", icon: Shield },
             { id: "actions", label: "Audit Logs", icon: Terminal }
           ].map(tab => (
             <button 
@@ -369,6 +375,54 @@ export default function Logs() {
                     </div>
                   </div>
                  )}
+               </div>
+            )}
+
+            {activeTab === "whatsapp" && (
+               <div className="overflow-hidden rounded-2xl border border-border shadow-sm bg-card">
+                 <div className="overflow-x-auto">
+                   <table className="w-full text-left border-collapse">
+                     <thead>
+                       <tr className="bg-muted/30 text-[11px] font-bold text-muted-foreground uppercase tracking-wider border-b border-border">
+                         <th className="px-6 py-4">Received At</th>
+                         <th className="px-6 py-4">Event</th>
+                         <th className="px-6 py-4">Instance ID</th>
+                         <th className="px-6 py-4">Raw Payload</th>
+                       </tr>
+                     </thead>
+                     <tbody className="divide-y divide-border/50">
+                       {filteredWhatsAppLogs.map((l, i) => (
+                         <tr key={l._id || i} className="hover:bg-muted/20 transition-colors text-xs group">
+                           <td className="px-6 py-4 text-muted-foreground whitespace-nowrap font-mono">
+                             {l.received_at ? format(new Date(l.received_at), 'HH:mm:ss dd MMM') : 'N/A'}
+                           </td>
+                           <td className="px-6 py-4">
+                             <span className="px-2 py-0.5 rounded-full bg-primary/10 text-primary font-bold uppercase text-[9px]">
+                               {l.event}
+                             </span>
+                           </td>
+                           <td className="px-6 py-4 font-mono text-muted-foreground">{l.instanceId}</td>
+                           <td className="px-6 py-4">
+                             <details className="group border border-border rounded-xl bg-muted/30">
+                               <summary className="text-[9px] font-bold text-primary p-2 cursor-pointer hover:bg-muted/50 list-none flex items-center justify-between transition-all">
+                                 <span>VIEW JSON</span>
+                                 <ChevronUp className="w-3 h-3 group-open:rotate-180 transition-transform" />
+                               </summary>
+                               <div className="p-3 bg-muted/80 text-foreground font-mono text-[10px] overflow-x-auto whitespace-pre rounded-b-xl border-t border-border">
+                                 {JSON.stringify(l, null, 2)}
+                               </div>
+                             </details>
+                           </td>
+                         </tr>
+                       ))}
+                       {filteredWhatsAppLogs.length === 0 && (
+                         <tr>
+                           <td colSpan={4} className="p-20 text-center text-muted-foreground italic">No WhatsApp records found.</td>
+                         </tr>
+                       )}
+                     </tbody>
+                   </table>
+                 </div>
                </div>
             )}
           </div>
