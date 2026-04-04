@@ -285,9 +285,9 @@ export const translations: Record<string, Record<string, string>> = {
     sms_notice: "You will be able to send ledger summaries directly via SMS.",
     // Documentation
     doc_intro_title: "Knowledge Base",
-    doc_intro_desc: "Everything you need to know about managing your personal resources with the SafiulAlom Bot system.",
+    doc_intro_desc: "Everything you need to know about managing your personal resources with the Life-OS system.",
     doc_chat_title: "Chat Assistant",
-    doc_chat_desc: "Our AI-powered chat assistant understands natural language. You can type things like 'Ammu k 500 tk dilam' or 'Add 1000 tk to bKash' and it will automatically categorize and record the transaction. No more manual form filling unless you want to!",
+    doc_chat_desc: "Our AI assistant understands natural language. Use '@Name' (Person) and '#Account' (Wallet) for 'Pro' shortcuts. Example: '@MotaherVi dilam 500 #bKash theke'.",
     doc_tg_title: "Telegram Integration",
     doc_tg_desc: "Track expenses on the go! Connect your Telegram account to our bot. Simply send a message to the bot, and it will be processed instantly. Use the dashboard to review your history and reports.",
     doc_ledger_title: "Ledger & Entities",
@@ -296,13 +296,20 @@ export const translations: Record<string, Record<string, string>> = {
     doc_reports_desc: "Get granular insights into your spending habits. Filter reports by person, category, or time period. See your net position across all entities instantly.",
     doc_team_title: "Team Collaboration",
     doc_team_desc: "Share your life-OS with family or team members. Assign roles like Owner, Editor, or Viewer to manage permissions and keep everyone in the loop.",
+    doc_wa_title: "WhatsApp Assistant",
+    doc_wa_desc: "Coming soon to your favorite messenger! Soon you can track everything via WhatsApp with the same AI intelligence. Stay tuned for the WaAPI integration.",
     doc_security_title: "Privacy & Security",
     doc_security_desc: "Your data is yours. We use advanced encryption and secure session management to ensure your financial history stays private and protected.",
+    doc_privacy_title: "Data Privacy Policy",
+    doc_privacy_desc: "Life-OS is designed with privacy as the core pillar. We only collect what's necessary to maintain your financial ledger across devices.",
+    privacy_collected_title: "What We Collect",
+    privacy_collected_desc: "We only store your platform-specific IDs (Telegram/WhatsApp ID) and the basic name/username you provide to identify your ledger. We never access your contacts, location, or any other personal media.",
+    privacy_assurance: "Other than your messenger identity, no personal data is shared, viewed, or saved by our systems. Your data is encrypted and secure.",
     quick_tips_title: "Quick Tips",
     tip_1: "Use 'transfer' type to move money between accounts.",
     tip_2: "Add 'openingBalance' in account metadata for accurate totals.",
     tip_3: "Mention person names in chat to automatically link debt entries.",
-    tip_4: "Check the 'Pending Review' badge if AI interpretation needs confirmation.",
+    tip_4: "Use @Name for people and #Account for wallets as 'Pro' shortcuts in chat.",
     new_feature_instant: "New Feature: Instant Transactions",
 
     // Help Modal (Now in Docs)
@@ -333,6 +340,77 @@ export const translations: Record<string, Record<string, string>> = {
     doc_domain_personal: "Personal: Daily life, savings, and family.",
     doc_domain_work: "Professional: Office costs, lunch, and advances.",
     doc_domain_business: "Business: Inventory, sales, and vendor payables.",
+    
+    // Detailed Docs / Shortcuts
+    doc_shortcuts_title: "Shortcuts & Magic",
+    doc_shortcuts_desc: "Use these symbols and keywords to skip long forms and type like a pro.",
+    shortcut_entity: "@Name",
+    shortcut_entity_desc: "Links to a Person, Shop, or Office. Type '@MotaherVi dilam 500' to record debt.",
+    shortcut_account: "#Account",
+    shortcut_account_desc: "Links to a Wallet or Bank. Type '#bKash topup 100' to record fund inflow.",
+    shortcut_query: "Kobe / Last",
+    shortcut_query_desc: "Search history. Type 'Kobe tora katsi?' or 'Gari tel last kobe?' to find records.",
+    
+    // Scenarios
+    doc_scenarios_title: "Real World Use Cases",
+    doc_scenarios_desc: "How to apply Life-OS magic to your specific situation.",
+    scenario_office_title: "💼 Office Manager",
+    scenario_office_desc: "Separate your boss's funds from personal cash. Receive funds into #OfficeAccount and spend from it. Use @Boss as the source entity.",
+    scenario_mess_title: "🎓 Bachelor Mess",
+    scenario_mess_desc: "Total bazar tracking and meal logs. Use '@Rahim: 2, @Ami: 1' to record meals. Calculate meal rate at month-end using Bajar Summary / Total Meals.",
+    
+    // Detailed Command List
+    doc_commands_title: "Command Cheat Sheet",
+    doc_commands_desc: "Essential commands for both Telegram and Chat Assistant.",
+    cmd_acc: "/balance",
+    cmd_acc_desc: "View balances across all your wallets & banks.",
+    cmd_summary: "/summary",
+    cmd_summary_desc: "View current month summary (Income, Expense, Net).",
+    cmd_edit: "/edit <id> <new text>",
+    cmd_edit_desc: "Correct a wrong entry. Example: '/edit abc125 500 bajar'.",
+    cmd_del: "/delete <id>",
+    cmd_del_desc: "Delete a specific entry by its short ID.",
+    cmd_login: "/login",
+    cmd_login_desc: "Get your one-time link or OTP to access this Dashboard.",
+
+    // Advanced Metadata
+    doc_metadata_title: "Smart Context (Metadata)",
+    doc_metadata_desc: "The system automatically captures detailed context for specific entities.",
+    meta_odo: "Odometer (Vehicles)",
+    meta_odo_desc: "When paying for fuel (@FZ_V3 fuel 500), mention 'odo 12500' to track mileage.",
+    meta_bill: "Bill Month (Utility)",
+    meta_bill_desc: "For @DESCO or @WASA bills, mention 'November' or 'Last month' to link the payment to the correct period.",
+    meta_items: "Itemized List (Bajar)",
+    meta_items_desc: "List items like 'Murgi 500, Tel 200' to automatically extract bazaar details.",
+
+    // Settlement
+    doc_settlement_guide_title: "Closing Debts (Settlement)",
+    doc_settlement_guide_desc: "How to properly mark a loan as PAID.",
+    settle_rule: "Use 'Settlement' type or say 'Hasif repayment dise' / 'Dena shodh korlam' in chat. This will zero out the balance for that person.",
+    
+    // Credits
+    credit_system_title: "AI Bits & Credits",
+    credit_system_desc: "To keep our AI fast and free, everyone gets 50 daily 'Bits'. Using AI naturally costs 1 bit. Basic commands like /balance are always free!",
+    topup_instructions: "Need more? Send a screenshot of your bKash/Nagad support to our admin on Telegram to upgrade your daily limit.",
+    support_upgrade_title: "💖 Support & Upgrade Limit",
+    support_step_1: "Send any support amount to 01967550181 (bKash/Rocket/Nagad Personal).",
+    support_step_2: "Take a screenshot of your payment confirmation.",
+    support_step_3: "Send the screenshot along with your Telegram ID/Phone to [ @safiulalom ](https://t.me/safiulalom).",
+    support_step_4: "Your daily AI limit will be upgraded within 2-4 hours!",
+
+    // Onboarding / How to Use
+    onboarding_title: "How to Get Started",
+    onboarding_desc: "Follow these steps to sync your life with Life-OS.",
+    step_tg_connect_title: "🔗 Connect Telegram",
+    step_tg_connect_desc: "1. Find our bot on Telegram. 2. Type '/login' to get your unique ID. 3. Enter the ID in Dashboard > Settings to sync your accounts.",
+    step_chat_usage_title: "💬 Using Chat/Bot",
+    step_chat_usage_desc: "Simply talk naturally! Example: '@Bazar murgi 500 #Cash'. The AI will analyze and save it. If information is missing, it will ask you a question.",
+    step_report_usage_title: "📊 Viewing Reports",
+    step_report_usage_desc: "Head to the 'Reports' page to see your monthly savings, category-wise spending, and your total net position across all wallets.",
+
+    // More detail buttons
+    more_details: "More Details",
+    back_to_top: "Back to Top",
   },
   bn: {
     overview: "ওভারভিউ",
@@ -620,9 +698,9 @@ export const translations: Record<string, Record<string, string>> = {
     sms_notice: "আপনি সরাসরি SMS এর মাধ্যমে লেজার সামারি পাঠাতে পারবেন।",
     // Documentation
     doc_intro_title: "নলেজ বেস (Knowledge Base)",
-    doc_intro_desc: "শফিউল আলম বট সিস্টেমের মাধ্যমে আপনার ব্যক্তিগত সম্পদ পরিচালনার বিষয়ে আপনার যা কিছু জানা প্রয়োজন।",
+    doc_intro_desc: "Life-OS : Personal AI Assistant সিস্টেমের মাধ্যমে আপনার ব্যক্তিগত সম্পদ পরিচালনার বিষয়ে আপনার যা কিছু জানা প্রয়োজন।",
     doc_chat_title: "চ্যাট অ্যাসিস্ট্যান্ট",
-    doc_chat_desc: "আমাদের এআই-চালিত চ্যাট অ্যাসিস্ট্যান্ট স্বাভাবিক ভাষা বুঝতে পারে। আপনি 'আম্মুকে ৫০০ টাকা দিলাম' বা 'বিকাশে ১০০০ টাকা যোগ করো' এর মতো কথা লিখতে পারেন এবং এটি স্বয়ংক্রিয়ভাবে লেনদেনটিকে শ্রেণীবদ্ধ এবং রেকর্ড করবে।",
+    doc_chat_desc: "আমাদের এআই অ্যাসিস্ট্যান্ট সাধারণ ভাষা বোঝে। দ্রুত এন্ট্রির জন্য ব্যক্তির আগে '@' এবং অ্যাকাউন্টের আগে '#' শর্টকাট ব্যবহার করুন। যেমন: '@Boss ১০,০০০ দিল #OfficeFund এ'।",
     doc_tg_title: "টেলিগ্রাম ইন্টিগ্রেশন",
     doc_tg_desc: "সব সময় আপডেট থাকুন! আপনার টেলিগ্রাম অ্যাকাউন্ট আমাদের বটের সাথে সংযুক্ত করুন। কেবল বটকে একটি মেসেজ পাঠান এবং এটি তাৎক্ষণিকভাবে প্রসেস করা হবে।",
     doc_ledger_title: "লেজার ও তালিকা",
@@ -631,13 +709,20 @@ export const translations: Record<string, Record<string, string>> = {
     doc_reports_desc: "আপনার ব্যয়ের অভ্যাস সম্পর্কে বিস্তারিত তথ্য পান। ব্যক্তি, বিভাগ বা সময়ের ভিত্তিতে রিপোর্ট ফিল্টার করুন।",
     doc_team_title: "টিম কোলাবরেশন",
     doc_team_desc: "পরিবার বা টিমের সদস্যদের সাথে আপনার লাইফ-ওএস শেয়ার করুন। পারমিশন ম্যানেজ করতে ওনার, এডিটর বা ভিউয়ারের মতো রোল অ্যাসাইন করুন।",
+    doc_wa_title: "হোয়াটসঅ্যাপ অ্যাসিস্ট্যান্ট",
+    doc_wa_desc: "আপনার প্রিয় মেসেঞ্জারে শীঘ্রই আসছি! খুব শীঘ্রই আপনি একই এআই বুদ্ধিমত্তা দিয়ে হোয়াটসঅ্যাপের মাধ্যমে সবকিছু ট্র্যাক করতে পারবেন।",
     doc_security_title: "গোপনীয়তা ও নিরাপত্তা",
     doc_security_desc: "আপনার তথ্য আপনারই। আপনার আর্থিক ইতিহাস গোপন এবং সুরক্ষিত রাখতে আমরা উন্নত এনক্রিপশন এবং নিরাপদ সেশন ম্যানেজমেন্ট ব্যবহার করি।",
+    doc_privacy_title: "গোপনীয়তার নীতি (Privacy Policy)",
+    doc_privacy_desc: "লাইফ-ওএস আপনার তথ্যের সুরক্ষাকে সর্বোচ্চ গুরুত্ব দেয়। আপনার হিসাবগুলো নিরাপদে সংরক্ষণ করার জন্য কেবল প্রয়োজনীয় তথ্যটুকুই সংগ্রহ করা হয়।",
+    privacy_collected_title: "আমরা কি কি তথ্য সংগ্রহ করি?",
+    privacy_collected_desc: "আমরা শুধুমাত্র আপনার মেসেঞ্জার আইডি (টেলিগ্রাম বা হোয়াটসঅ্যাপ আইডি) এবং আপনার নাম/ইউজারনেম মনে রাখি যাতে আপনার হিসাবগুলো খুঁজে পাওয়া যায়। আপনার কন্টাক্ট লিস্ট, লোকেশন বা অন্য কোনো ব্যক্তিগত ফাইল আমরা ব্যবহার করি না।",
+    privacy_assurance: "আমরা শুধুমাত্র আপনার প্রয়োজনীয় পরিচিতিটুকু (নাম ও আইডি) আপনার লেজারটি খুঁজে পেতে ব্যবহার করি। আপনার অনুমতি ছাড়া কোনো তথ্য তৃতীয় কোনো পক্ষকে প্রদান করা হয় না এবং আপনার ব্যক্তিগত কোনো মেসেজ বা কন্টাক্ট আমরা অ্যাক্সেস করি না। আপনার ডাটা আমাদের কাছে সম্পূর্ণ নিরাপদ।",
     quick_tips_title: "কুইক টিপস",
     tip_1: "অ্যাকাউন্টগুলোর মধ্যে টাকা স্থানান্তরের জন্য 'ট্রান্সফার' (transfer) টাইপ ব্যবহার করুন।",
     tip_2: "সঠিক হিসাবের জন্য অ্যাকাউন্ট মেটাডেটাতে 'openingBalance' যোগ করুন।",
     tip_3: "দেনা-পাওনা স্বয়ংক্রিয়ভাবে লিঙ্ক করতে চ্যাটে ব্যক্তির নাম উল্লেখ করুন।",
-    tip_4: "এআই ব্যাখ্যার নিশ্চিতকরণের প্রয়োজন হলে 'পেন্ডিং রিভিউ' (Pending Review) ব্যাজটি চেক করুন।",
+    tip_4: "চ্যাটে 'প্রো' শর্টকাট হিসেবে ব্যক্তির জন্য @Name এবং ওয়ালেটের জন্য #Account ব্যবহার করুন।",
     new_feature_instant: "নতুন ফিচার: ইনস্ট্যান্ট লেনদেন",
 
     // Help Modal (Now in Docs)
@@ -668,5 +753,75 @@ export const translations: Record<string, Record<string, string>> = {
     doc_domain_personal: "ব্যক্তিগত: দৈনন্দিন জীবন এবং পারিবারিক লেনদেন।",
     doc_domain_work: "পেশাদার: অফিসের খরচ, লাঞ্চ এবং অগ্রিম টাকা।",
     doc_domain_business: "ব্যবসা: ইনভেন্টরি, বিক্রি এবং ভেন্ডর পে-অ্যাবল।",
+    
+    // Detailed Docs / Shortcuts
+    doc_shortcuts_title: "শর্টকাট ও ম্যাজিক",
+    doc_shortcuts_desc: "দীর্ঘ ফর্ম পূরণ না করে প্রো-দের মতো চ্যাট করতে এই চিহ্ন এবং কিওয়ার্ডগুলো ব্যবহার করুন।",
+    shortcut_entity: "@Name",
+    shortcut_entity_desc: "ব্যক্তি, দোকান বা অফিসের সাথে লিঙ্ক করে। যেমন: '@MotaherVi ৫০০ দিলাম' বললেই হিসাব হয়ে যাবে।",
+    shortcut_account: "#Account",
+    shortcut_account_desc: "ওয়ালেট বা ব্যাংকের সাথে লিঙ্ক করে। যেমন: '#bKash ১০০ রিচার্জ' বললে ব্যালেন্স আপডেট হবে।",
+    shortcut_query: "Kobe / Last",
+    shortcut_query_desc: "পুরানো ইতিহাস খুঁজুন। যেমন: 'গাড়িতে তেল লাস্ট কবে নিসি?' বা 'রাহিম কবে ৫০০০ দিসে?' জিজ্ঞাসা করুন।",
+    
+    // Scenarios
+    doc_scenarios_title: "বাস্তব জীবনের ব্যবহার (Use Cases)",
+    doc_scenarios_desc: "আপনার নির্দিষ্ট পরিস্থিতিতে লাইফ-ওএস ম্যাজিক প্রয়োগ করার উপায়।",
+    scenario_office_title: "💼 অফিস ম্যানেজার",
+    scenario_office_desc: "বসের ফান্ড নিজের টাকা থেকে আলাদা রাখুন। #Office_Fund এ টাকা গ্রহণ করুন এবং সেখান থেকেই অফিসের খরচ করুন।",
+    scenario_mess_title: "🎓 ব্যাচেলর মেস",
+    scenario_mess_desc: "বাজারের পূর্ণ ট্র্যাকিং এবং মিল লগ। '@Rahim: ২, @Ami: ১' এভাবে মিল কাউন্ট রেকর্ড করুন। মাস শেষে মিল রেট বের করা সহজ হবে।",
+    
+    // Detailed Command List
+    doc_commands_title: "কমান্ড চিট শিট (Command List)",
+    doc_commands_desc: "টেলিগ্রাম এবং চ্যাট অ্যাসিস্ট্যান্টের জন্য অতি প্রয়োজনীয় কমান্ডগুলো নিচে দেয়া হলো।",
+    cmd_acc: "/balance",
+    cmd_acc_desc: "সব ওয়ালেট এবং ব্যাংকের বর্তমান ব্যালেন্স দেখুন।",
+    cmd_summary: "/summary",
+    cmd_summary_desc: "চলতি মাসের রিপোর্ট (টোটাল আয়, ব্যয় ও নিট সঞ্চয়) দেখুন।",
+    cmd_edit: "/edit <id> <নতুন তথ্য>",
+    cmd_edit_desc: "ভুল তথ্য ঠিক করুন। যেমন: '/edit abc125 ৫০০ বাজার' লিখে ৫০০০ টাকা থাকলে ৫০০ করে ফেলুন।",
+    cmd_del: "/delete <id>",
+    cmd_del_desc: "শর্ট আইডি ব্যবহার করে যেকোনো নির্দিষ্ট এন্ট্রি মুছে ফেলুন।",
+    cmd_login: "/login",
+    cmd_login_desc: "ড্যাশবোর্ডে লগইন করার ওটিপি বা ওয়ান-টাইম লিঙ্ক পান।",
+
+    // Advanced Metadata
+    doc_metadata_title: "স্মার্ট কন্টেক্সট (Metadata)",
+    doc_metadata_desc: "সিস্টেম স্বয়ংক্রিয়াভাবে নির্দিষ্ট এন্ট্রিগুলোর বিস্তারিত তথ্য সংগ্রহ করে।",
+    meta_odo: "ওডোমিটার (যানবাহনে)",
+    meta_odo_desc: "গাড়িতে তেল নেওয়ার সময় (@FZ_V3 fuel ৫০০) 'odo ১২৫০০' উল্লেখ করলে মাইলেজ ট্র্যাকিং সহজ হবে।",
+    meta_bill: "বিল মাস (ইউটিলিটি)",
+    meta_bill_desc: "@DESCO বা @WASA বিলের ক্ষেত্রে 'নভেম্বর' বা 'লাস্ট মাস' উল্লেখ করলে সঠিক মাসের সাথে বিল লিঙ্ক হয়ে যাবে।",
+    meta_items: "বাজারের তালিকা",
+    meta_items_desc: "'মুরগি ৫০০, তেল ২০০' এভাবে লিখলে অটোমেটিক বাজারের আইটেমগুলো আলাদা হয়ে যাবে।",
+
+    // Settlement
+    doc_settlement_guide_title: "দেনা-পাওনা নিষ্পত্তি (Settlement)",
+    doc_settlement_guide_desc: "কীভাবে একটি লোন 'পরিষোধ হয়েছে' হিসেবে চিহ্নিত করবেন?",
+    settle_rule: "সেটেলমেন্ট টাইপ ব্যবহার করুন অথবা চ্যাটে বলুন 'হাফিজ রিপেমেন্ট দিসে' বা 'দেনা শোধ করলাম'। এতে ওই ব্যক্তির ব্যালেন্স জিরো হয়ে যাবে।",
+    
+    // Credits
+    credit_system_title: "এআই বিটস ও ক্রেডিট",
+    credit_system_desc: "আমাদের এআই দ্রুত এবং সচল রাখতে সবার জন্য প্রতিদিন ৫০টি 'বিটস' বরাদ্দ থাকে। এআই ব্যবহার করলে ১ বিট খরচ হয়। /balance এর মতো কমান্ডগুলো সবসময় ফ্রি!",
+    topup_instructions: "আরও প্রয়োজন? আপনার দৈনিক লিমিট বাড়ানোর জন্য আমাদের এডমিনকে টেলিগ্রামে স্ক্রিনশট দিন।",
+    support_upgrade_title: "💖 সাপোর্ট ও লিমিট আপগ্রেড",
+    support_step_1: "যেকোনো পরিমাণের সাপোর্ট পাঠান 01967550181 (বিকাশ/রকেট/নগদ পার্সোনাল)।",
+    support_step_2: "টাকা পাঠানোর কনফার্মেশন মেসেজ বা স্ক্রিনশট নিন।",
+    support_step_3: "স্ক্রিনশটটি আপনার আইডি সহ টেলিগ্রামে [ @safiulalom ](https://t.me/safiulalom) আইডিতে পাঠান।",
+    support_step_4: "পরবর্তী ২-৪ ঘণ্টার মধ্যে আপনার দৈনিক এআই লিমিট বাড়িয়ে দেওয়া হবে!",
+
+    // Onboarding / How to Use
+    onboarding_title: "কীভাবে শুরু করবেন?",
+    onboarding_desc: "লাইফ-ওএস-এর সাথে আপনার জীবন সিঙ্ক করতে এই কয়েকটি ধাপ অনুসরণ করুন।",
+    step_tg_connect_title: "🔗 টেলিগ্রাম কানেক্ট করুন",
+    step_tg_connect_desc: "১. টেলিগ্রামে আমাদের বটটি খুঁজুন। ২. '/login' লিখে আপনার ইউনিক আইডি সংগ্রহ করুন। ৩. ড্যাশবোর্ড > সেটিংস-এ গিয়ে আইডি-টি দিয়ে অ্যাকাউন্ট সিঙ্ক করুন।",
+    step_chat_usage_title: "💬 চ্যাট/বট ব্যবহার",
+    step_chat_usage_desc: "স্বাভাবিকভাবে চ্যাট করুন! যেমন: '@Bazar মুরগি ৫০০ #Cash'। এআই এটি প্রসেস করে সেভ করে নিবে। কোনো তথ্য কম থাকলে বট আপনাকে প্রশ্ন করবে।",
+    step_report_usage_title: "📊 রিপোর্ট দেখা",
+    step_report_usage_desc: "'রিপোর্ট' পেজে গিয়ে আপনার মাসিক সঞ্চয়, ক্যাটেগরি অনুযায়ী খরচ এবং আপনার সব ওয়ালেটের নিট ব্যালেন্স এক পলকে দেখে নিন।",
+
+    more_details: "বিস্তারিত দেখুন",
+    back_to_top: "উপরে যান",
   }
 };

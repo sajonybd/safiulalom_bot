@@ -15,7 +15,7 @@ const Index = () => {
         <div className="flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <h2 className="text-2xl font-bold text-foreground tracking-tight">{t('dashboard')}</h2>
-            <p className="text-sm text-muted-foreground mt-1">Manage your personal resource planner at a glance.</p>
+            <p className="text-sm text-muted-foreground mt-1">Manage your Personal AI Assistant at a glance.</p>
           </div>
           <QuickStats />
         </div>

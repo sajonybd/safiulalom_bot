@@ -1,7 +1,7 @@
 {
   "name": "safiulalom_bot",
   "version": "0.1.0",
-  "description": "Telegram bot for safiulalom_bot (Vercel webhook).",
+  "description": "Life-OS : Personal AI Assistant",
   "license": "MIT",
   "main": "api/telegram.js",
   "scripts": {

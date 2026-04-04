@@ -1,15 +1,17 @@
-# safiulalom_bot (Telegram + Next.js)
+# Life-OS : Personal AI Assistant (Telegram + WhatsApp + Next.js)
 
-This is a minimal Telegram bot + web UI built with Next.js.
+This is a comprehensive Life-OS (Personal AI Assistant) managed via AI assistants on Telegram and WhatsApp, with a visual dashboard built in Next.js.
 
 The bot supports:
 
-- **Long polling** (best for local dev / simple VPS, no public URL needed)
-- **Webhook** (best for Vercel or a VPS with a public HTTPS URL)
+- **Telegram Bot**: Full command support and AI natural language processing.
+- **WhatsApp Bot**: Lightweight, NLP-driven entry via WaAPI.app.
+- **Unified Credit System**: 50 AI Bits per day per user across all platforms.
 
 ## 1) Prerequisites
 
 - A Telegram bot token from **@BotFather**
+- A **WaAPI.app** account for WhatsApp integration
 - A Vercel project connected to this Git repository
 
 ## 2) Environment variables
@@ -17,16 +19,26 @@ The bot supports:
 Set these in **Vercel → Project → Settings → Environment Variables**:
 
 - `BOT_TOKEN` (required) — from @BotFather
-- `WEBHOOK_SECRET` (recommended) — any random string (prevents random POSTs)
-- `MONGODB_URI` (required) — MongoDB connection string (Atlas, etc.)
-- `ADMIN_USER_IDS` (recommended) — comma separated Telegram user ids allowed to use the bot
-- `APP_URL` (recommended) — your deployed base URL (used by `/ui` command)
-- `AUTH_SECRET` (required for UI login) — random secret used to secure one-time UI login codes
-- `GEMINI_API_KEY` (required for AI shorthand parse)
-- `GEMINI_MODEL` (optional, default `gemini-2.0-flash`)
-- `ADMIN_USER_IDS` (optional) — comma separated Telegram user ids if you want private bot
+- `WEBHOOK_SECRET` (recommended) — random string for Telegram security
+- `MONGODB_URI` (required) — MongoDB connection string
+- `APP_URL` (recommended) — your deployed base URL
+- `AUTH_SECRET` (required) — for UI login security
+- `GEMINI_API_KEY` (required) — for AI interpretation
+- `WAAPI_TOKEN` — for WhatsApp support
+- `WAAPI_INSTANCE_ID` — for WhatsApp support
+- `WAAPI_WEBHOOK_SECRET` — for WhatsApp security
+- `ADMIN_USER_IDS` — comma separated Telegram user IDs for admin access
 
-## 2.1) Find your Telegram user id
+## 3) Support & Limit Upgrade
+
+Life-OS is free for everyone with a default limit of **50 AI Bits per day**. If you need more:
+
+1. Send any support amount to **01967550181** (bKash/Rocket/Nagad Personal).
+2. Take a screenshot of the transaction.
+3. Send it along with your User ID to **@safiulalom** on Telegram.
+4. Your daily limit will be upgraded within 2-4 hours.
+
+## 4) Find your Telegram user id
 
 - Message `@userinfobot` in Telegram to see your numeric user id.
 
@@ -38,7 +50,8 @@ Set these in **Vercel → Project → Settings → Environment Variables**:
 - `/person_out Ma 500 medicine` (I gave Ma, so I should get)
 - `/person_in Vaiya 1200 groceries` (Vaiya gave me, so I should pay)
 - `/person_summary Ma` (person-wise balance + recent history)
-- Natural language (no command): `1000 bajar @Ma #House2`, `vaiya 500 dilo`, etc.
+- Natural language (no command): `@Ma ke 1000 bajar dilam #Cash theke`, `@Hasif theke 500 nilam`, `#bKash theke 500 mobile recharge`
+- **Pro Shortcuts**: `@Name` for person/entity focus, `#Account` for source/destination wallet.
 - `/ai_cancel` (cancel pending follow-up question)
 - `/list 10` (recent entries)
 - `/summary` (this month)
@@ -99,8 +112,9 @@ curl "https://api.telegram.org/bot$BOT_TOKEN/getWebhookInfo"
 ## Notes
 
 - Telegram **cannot** send webhooks to plain `localhost`. Use polling locally, or use a public HTTPS tunnel.
-- AI parse flow: if details are missing, bot asks follow-up and waits for your next message before saving.
-- Pending follow-up state is stored in MongoDB collection `pending_transactions` and auto-expires.
+- AI parse flow: Extract items (Bajar), mileage (Fuel), and meal counts (Bachelor Mess). If details missing, bot asks follow-up.
+- State management: Pending follow-ups are stored in `pending_transactions`.
+- Pro Shortcuts: Use `@` for entities and `#` for accounts in any message.
 - UI/API AI parse endpoint: `POST /api/ai_parse` with `{ "text": "...", "save": true|false }`.
 - Settlement endpoint: `POST /api/ui_settlement` with `{ "person": "Shimul", "side": "receivable|payable", "amount": 500, "purpose": "partial return" }`.
 - Advanced lenden kinds supported: `loan_given`, `loan_taken`, `fund_received`, `settlement_in`, `settlement_out`.
