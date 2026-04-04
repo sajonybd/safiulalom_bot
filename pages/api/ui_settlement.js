@@ -17,8 +17,15 @@ async function handler(req, res) {
       return;
     }
 
-    const { getFamilyId } = require("../../lib/users");
+    const { getFamilyId, getUserRoleInFamily } = require("../../lib/users");
     const familyId = await getFamilyId(userId);
+
+    // Permission check for mutations
+    const role = await getUserRoleInFamily(userId, familyId);
+    if (role === "VIEWER") {
+      res.statusCode = 403;
+      return res.end(JSON.stringify({ ok: false, error: "Forbidden: VIEWER role cannot perform this action." }));
+    }
 
     const person = String((req.body && req.body.person) || "").trim();
     const amount = parseAmount(req.body && req.body.amount);

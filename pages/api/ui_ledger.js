@@ -1,5 +1,5 @@
 const { getSessionUserId } = require("../../lib/session");
-const { getFamilyId } = require("../../lib/users");
+const { getFamilyId, getUserRoleInFamily } = require("../../lib/users");
 const {
   parseAmount,
   parseDateInput,
@@ -28,6 +28,15 @@ async function handler(req, res) {
     }
 
     const familyId = await getFamilyId(userId);
+
+    // Permission check for mutations
+    if (req.method !== "GET") {
+      const role = await getUserRoleInFamily(userId, familyId);
+      if (role === "VIEWER") {
+        res.statusCode = 403;
+        return res.end(JSON.stringify({ ok: false, error: "Forbidden: VIEWER role cannot perform this action." }));
+      }
+    }
 
     if (req.method === "GET") {
       const scope = String((req.query && req.query.scope) || "all").trim();
@@ -243,9 +252,17 @@ async function handler(req, res) {
         destinationAccount,
         createdAt,
       });
-      res.statusCode = result.ok ? 200 : 404;
+
+      console.log(`[UI_Ledger] PATCH update result for ID ${id}:`, result.ok);
+
+      if (!result.ok) {
+        res.statusCode = 404;
+        return res.end(JSON.stringify({ ok: false, error: "Transaction not found or could not be updated." }));
+      }
+
+      res.statusCode = 200;
       res.setHeader("content-type", "application/json; charset=utf-8");
-      res.end(JSON.stringify({ ok: result.ok }));
+      res.end(JSON.stringify({ ok: true }));
       return;
     }
 

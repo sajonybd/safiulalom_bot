@@ -1,10 +1,11 @@
 const { getSessionUserId } = require("../../lib/session");
-const { getFamilyId } = require("../../lib/users");
+const { getFamilyId, getUserRoleInFamily } = require("../../lib/users");
 const {
   addEntity,
   listEntities,
   updateEntity,
   deleteEntity,
+  getEntity,
   ensureDefaultEntities,
 } = require("../../lib/entities");
 const { accountsBalances } = require("../../lib/ledger");
@@ -26,6 +27,15 @@ async function handler(req, res) {
     }
 
     const familyId = await getFamilyId(userId);
+
+    // Permission check for mutations
+    if (req.method !== "GET") {
+      const role = await getUserRoleInFamily(userId, familyId);
+      if (role === "VIEWER") {
+        res.statusCode = 403;
+        return res.end(JSON.stringify({ ok: false, error: "Forbidden: VIEWER role cannot perform this action." }));
+      }
+    }
 
     if (req.method === "GET") {
       await ensureDefaultEntities({ userId, familyId });
@@ -91,6 +101,14 @@ async function handler(req, res) {
         return;
       }
 
+      // Safeguard: Do not allow renaming or deleting the default "Cash" account
+      const entity = await getEntity({ familyId, id });
+      if (entity && entity.nameKey === 'cash' && entity.type === 'ACCOUNT') {
+        res.statusCode = 400;
+        res.end(JSON.stringify({ ok: false, error: "Default cash account cannot be modified." }));
+        return;
+      }
+
       const updates = {};
       if (req.body.name !== undefined) updates.name = req.body.name;
       if (req.body.type !== undefined) updates.type = req.body.type;
@@ -113,6 +131,14 @@ async function handler(req, res) {
         res.statusCode = 400;
         res.setHeader("content-type", "application/json; charset=utf-8");
         res.end(JSON.stringify({ ok: false, error: "id query param is required" }));
+        return;
+      }
+
+      // Safeguard: Do not allow renaming or deleting the default "Cash" account
+      const entity = await getEntity({ familyId, id });
+      if (entity && entity.nameKey === 'cash' && entity.type === 'ACCOUNT') {
+        res.statusCode = 400;
+        res.end(JSON.stringify({ ok: false, error: "Default cash account cannot be deleted." }));
         return;
       }
 

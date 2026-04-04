@@ -51,10 +51,10 @@ const formSchema = z.object({
   ]),
   amount: z.string().min(1, "Amount is required"),
   note: z.string().min(1, "Note is required"),
-  person: z.string().optional(),
-  sourceAccount: z.string().optional(),
-  destinationAccount: z.string().optional(),
-  date: z.string().optional(),
+  person: z.string().nullish(),
+  sourceAccount: z.string().nullish(),
+  destinationAccount: z.string().nullish(),
+  date: z.string().nullish(),
 });
 
 type FormValues = z.infer<typeof formSchema>;
@@ -100,6 +100,7 @@ export function TransactionModal({ open, onOpenChange, defaultValues }: Transact
 
   useEffect(() => {
     if (open) {
+      const formattedDate = defaultValues?.date ? new Date(defaultValues.date).toISOString().split('T')[0] : new Date().toISOString().slice(0, 10);
       form.reset({
         kind: "out",
         amount: "",
@@ -107,11 +108,13 @@ export function TransactionModal({ open, onOpenChange, defaultValues }: Transact
         person: "",
         sourceAccount: "",
         destinationAccount: "",
-        date: new Date().toISOString().slice(0, 10),
-        ...defaultValues,
+        ...Object.fromEntries(
+          Object.entries(defaultValues || {}).map(([k, v]) => [k, v === null ? "" : v])
+        ),
+        date: formattedDate, // Ensure date is formatted correctly
       });
     }
-  }, [open, defaultValues, form]);
+  }, [open, defaultValues?.id, form]); // Only reset when open status or the edited record ID changes
 
   const kind = form.watch("kind");
   const isPersonRequired = [
@@ -143,12 +146,16 @@ export function TransactionModal({ open, onOpenChange, defaultValues }: Transact
   ].includes(kind);
 
   const onSubmit = async (data: FormValues) => {
+    console.log("[TransactionModal] onSubmit triggered:", data);
     try {
+      const parsedDate = data.date ? new Date(data.date) : new Date();
       const payload = {
         ...data,
-        amount: data.amount, // API parses string to number
-        date: data.date ? new Date(data.date).toISOString() : undefined,
+        amount: data.amount,
+        date: isNaN(parsedDate.getTime()) ? new Date().toISOString() : parsedDate.toISOString(),
       };
+      
+      console.log("[TransactionModal] Payload prepared:", payload);
 
       if (isPersonRequired && !data.person) {
         form.setError("person", { message: t("person") + " is required" });
@@ -175,7 +182,7 @@ export function TransactionModal({ open, onOpenChange, defaultValues }: Transact
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto">
+      <DialogContent className="sm:max-w-[425px] max-h-[90vh] overflow-y-auto p-4 md:p-5 gap-3">
         <DialogHeader>
           <div className="flex items-center gap-2">
             <DialogTitle>{isEdit ? t("edit_transaction") : t("add_transaction")}</DialogTitle>
@@ -189,14 +196,20 @@ export function TransactionModal({ open, onOpenChange, defaultValues }: Transact
           </div>
         </DialogHeader>
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+          <form 
+            onSubmit={form.handleSubmit(onSubmit, (errors) => {
+              console.error("[TransactionModal] Validation errors:", errors);
+              toast.error("Please fix form errors before saving.");
+            })} 
+            className="space-y-3"
+          >
             <FormField
               control={form.control}
               name="kind"
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>{t("type")}</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder={t("select_type")} />
@@ -272,7 +285,7 @@ export function TransactionModal({ open, onOpenChange, defaultValues }: Transact
               />
             )}
 
-            <div className={cn("grid gap-4", showSource && showDest ? "grid-cols-2" : "grid-cols-1")}>
+            <div className={cn("grid gap-3", showSource && showDest ? "grid-cols-2" : "grid-cols-1")}>
               {showSource && (
                 <FormField
                   control={form.control}

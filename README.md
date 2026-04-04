@@ -7,6 +7,8 @@ The bot supports:
 - **Telegram Bot**: Full command support and AI natural language processing.
 - **WhatsApp Bot**: Lightweight, NLP-driven entry via WaAPI.app.
 - **Unified Credit System**: 50 AI Bits per day per user across all platforms.
+- **Team Management**: Role-Based Access Control (RBAC) to share ledgers with family or colleagues.
+- **Admin Control Room**: Comprehensive dashboard for user management, credit resets, and administrative audit logs.
 
 ## 1) Prerequisites
 

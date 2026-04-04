@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { usePeople } from "@/hooks/usePeople";
+import { useTeam } from "@/hooks/useTeam";
 import { TransactionModal } from "@/components/dashboard/TransactionModal";
 import { useState } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
@@ -14,9 +15,14 @@ import { useSettings } from "@/contexts/SettingsContext";
  */
 const Lenden = () => {
   const { data, isLoading } = usePeople();
+  const { data: teamData } = useTeam();
   const { t, currencySymbol } = useSettings();
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState<"settlement_in" | "settlement_out" | "loan_given" | "loan_taken">("loan_given");
+
+  const activeFamilyId = teamData?.activeFamilyId;
+  const currentTeam = teamData?.myFamilies?.find((f: any) => String(f.family_id) === String(activeFamilyId));
+  const myRole = currentTeam?.role || 'VIEWER';
 
   const peopleBalances: any[] = data?.people || [];
 
@@ -31,9 +37,11 @@ const Lenden = () => {
           <h2 className="text-xl font-bold text-foreground">{t("lenden")}</h2>
           <p className="text-sm text-muted-foreground">{t("lenden_desc")}</p>
         </div>
-        <Button size="sm" className="gap-1.5" onClick={() => { setModalType("loan_given"); setModalOpen(true); }}>
-          <Plus className="w-4 h-4" /> {t("add_loan_debt")}
-        </Button>
+        {myRole !== 'VIEWER' && (
+          <Button size="sm" className="gap-1.5" onClick={() => { setModalType("loan_given"); setModalOpen(true); }}>
+            <Plus className="w-4 h-4" /> {t("add_loan_debt")}
+          </Button>
+        )}
       </div>
 
       <TransactionModal open={modalOpen} onOpenChange={setModalOpen} defaultValues={{ kind: modalType }} />
@@ -112,14 +120,16 @@ const Lenden = () => {
                 <td className={`px-4 py-3 text-right font-mono font-semibold ${Number(person.net) >= 0 ? 'text-primary' : 'text-destructive'}`}>
                   {currencySymbol}{Math.abs(Number(person.net)).toLocaleString()}
                 </td>
-                <td className="px-4 py-3 text-center">
-                  <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => {
-                    setModalType(Number(person.net) >= 0 ? "settlement_in" : "settlement_out");
-                    setModalOpen(true);
-                  }}>
-                    {t("settle")}
-                  </Button>
-                </td>
+                 <td className="px-4 py-3 text-center">
+                    {myRole !== 'VIEWER' && (
+                      <Button variant="outline" size="sm" className="text-xs h-7" onClick={() => {
+                        setModalType(Number(person.net) >= 0 ? "settlement_in" : "settlement_out");
+                        setModalOpen(true);
+                      }}>
+                        {t("settle")}
+                      </Button>
+                    )}
+                 </td>
               </tr>
             ))}
           </tbody>

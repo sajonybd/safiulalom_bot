@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useSettings } from "@/contexts/SettingsContext";
 import { ConfirmModal } from "@/components/dashboard/ConfirmModal";
+import { useTeam } from "@/hooks/useTeam";
 
 const iconMap: Record<string, any> = {
   PERSON: Users,
@@ -19,10 +20,15 @@ const iconMap: Record<string, any> = {
 
 export default function Entities() {
   const { t, currencySymbol } = useSettings();
+  const { data: teamData } = useTeam();
   const [entities, setEntities] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [activeTab, setActiveTab] = useState<string>("ALL");
   const [search, setSearch] = useState("");
+  
+  const activeFamilyId = teamData?.activeFamilyId;
+  const currentTeam = teamData?.myFamilies?.find((f: any) => String(f.family_id) === String(activeFamilyId));
+  const myRole = currentTeam?.role || 'VIEWER';
   
   // Modal State
   const [modalOpen, setModalOpen] = useState(false);
@@ -138,9 +144,11 @@ export default function Entities() {
             <h2 className="text-xl font-bold text-foreground">{t("directory_entities")}</h2>
             <p className="text-sm text-muted-foreground">{t("manage_entities_desc")}</p>
           </div>
-          <Button size="sm" className="gap-1.5" onClick={() => openModal()}>
-            <Plus className="w-4 h-4" /> {t("add_entity")}
-          </Button>
+          {myRole !== 'VIEWER' && (
+            <Button size="sm" className="gap-1.5" onClick={() => openModal()}>
+              <Plus className="w-4 h-4" /> {t("add_entity")}
+            </Button>
+          )}
         </div>
 
         <Dialog open={modalOpen} onOpenChange={setModalOpen}>
@@ -252,17 +260,23 @@ export default function Entities() {
                       <Icon className="w-4 h-4" />
                       <span className="text-xs font-bold tracking-wider">{t(`type_${entity.type.toLowerCase()}`)}</span>
                     </div>
-                    <div className="flex gap-1 opacity-50 hover:opacity-100 transition-opacity">
-                      <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openModal(entity)}>
-                        <Edit className="w-3.5 h-3.5" />
-                      </Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => {
-                        setDeletingId({ id: entity.id, name: entity.name });
-                        setIsConfirmOpen(true);
-                      }}>
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </Button>
-                    </div>
+                    {myRole !== 'VIEWER' && (
+                      <div className="flex gap-1 opacity-50 hover:opacity-100 transition-opacity">
+                        {entity.nameKey !== 'cash' && (
+                          <>
+                            <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openModal(entity)}>
+                              <Edit className="w-3.5 h-3.5" />
+                            </Button>
+                            <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => {
+                              setDeletingId({ id: entity.id, name: entity.name });
+                              setIsConfirmOpen(true);
+                            }}>
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </Button>
+                          </>
+                        )}
+                      </div>
+                    )}
                   </div>
                   
                   <h4 className="text-lg font-semibold text-foreground mt-1">{entity.name}</h4>

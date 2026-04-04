@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ArrowUpRight, ArrowDownLeft, HandCoins, Loader2 } from "lucide-react";
 import { usePeople } from "@/hooks/usePeople";
+import { useTeam } from "@/hooks/useTeam";
 import { useSettings } from "@/contexts/SettingsContext";
 import { TransactionModal } from "@/components/dashboard/TransactionModal";
 
@@ -9,7 +10,12 @@ export function LendenLedger() {
   const [settlingPerson, setSettlingPerson] = useState<any>(null);
   
   const { data, isLoading } = usePeople();
+  const { data: teamData } = useTeam();
   const { t, currencySymbol } = useSettings();
+
+  const activeFamilyId = teamData?.activeFamilyId;
+  const currentTeam = teamData?.myFamilies?.find((f: any) => String(f.family_id) === String(activeFamilyId));
+  const myRole = currentTeam?.role || 'VIEWER';
   const peopleBalances: any[] = data?.people || [];
 
   const formatMoney = (n: number) => {
@@ -94,12 +100,14 @@ export function LendenLedger() {
                 <p className={`text-sm font-mono font-semibold ${p.net > 0 ? 'text-primary' : 'text-destructive'}`}>
                   {p.net > 0 ? '+' : '-'}{formatMoney(p.net)}
                 </p>
-                <button
-                  onClick={() => setSettlingPerson(p)}
-                  className="opacity-50 group-hover:opacity-100 text-[10px] px-2 py-1 rounded bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-all"
-                >
-                  {t('settle')}
-                </button>
+                {myRole !== 'VIEWER' && (
+                  <button
+                    onClick={() => setSettlingPerson(p)}
+                    className="opacity-50 group-hover:opacity-100 text-[10px] px-2 py-1 rounded bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-all"
+                  >
+                    {t('settle')}
+                  </button>
+                )}
               </div>
             </div>
           ))}

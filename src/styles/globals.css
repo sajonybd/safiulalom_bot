@@ -24,8 +24,8 @@
     --muted: 220 14% 96%;
     --muted-foreground: 215 12% 45%;
 
-    --accent: 38 92% 50%;
-    --accent-foreground: 220 20% 7%;
+    --accent: 160 20% 96%;
+    --accent-foreground: 160 50% 10%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 0 0% 100%;
@@ -33,7 +33,7 @@
     --success: 160 84% 39%;
     --success-foreground: 0 0% 100%;
 
-    --warning: 38 92% 50%;
+    --warning: 45 92% 50%;
     --warning-foreground: 220 20% 7%;
 
     --receivable: 160 84% 39%;
@@ -58,7 +58,7 @@
     --font-mono: 'JetBrains Mono', 'Fira Code', monospace;
 
     --gradient-primary: linear-gradient(135deg, hsl(160, 84%, 39%), hsl(170, 80%, 45%));
-    --gradient-accent: linear-gradient(135deg, hsl(38, 92%, 50%), hsl(28, 90%, 55%));
+    --gradient-accent: linear-gradient(135deg, hsl(45, 92% , 50%), hsl(35, 90% , 55%));
     --gradient-card: linear-gradient(145deg, hsl(0, 0%, 100%), hsl(220, 14%, 98%));
     --gradient-danger: linear-gradient(135deg, hsl(0, 72%, 51%), hsl(350, 70%, 45%));
 
@@ -85,8 +85,8 @@
     --muted: 220 14% 14%;
     --muted-foreground: 215 12% 50%;
 
-    --accent: 38 92% 50%;
-    --accent-foreground: 220 20% 7%;
+    --accent: 160 20% 15%;
+    --accent-foreground: 160 20% 90%;
 
     --destructive: 0 72% 51%;
     --destructive-foreground: 210 40% 98%;
@@ -94,7 +94,7 @@
     --success: 160 84% 39%;
     --success-foreground: 220 20% 7%;
 
-    --warning: 38 92% 50%;
+    --warning: 45 92% 50%;
     --warning-foreground: 220 20% 7%;
 
     --receivable: 160 84% 39%;

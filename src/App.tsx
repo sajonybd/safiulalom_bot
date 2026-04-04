@@ -15,6 +15,8 @@ import Docs from "./pages/Docs";
 import Logs from "./pages/Logs";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
+import Terms from "./pages/Terms";
+import Privacy from "./pages/Privacy";
 import { AuthGuard } from "@/components/AuthGuard";
 import { SettingsProvider } from "@/contexts/SettingsContext";
 
@@ -39,6 +41,8 @@ const App = () => (
               <Route path="/docs" element={<AuthGuard><Docs /></AuthGuard>} />
               <Route path="/logs" element={<AuthGuard><Logs /></AuthGuard>} />
               <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} />
+              <Route path="/privacy" element={<Privacy />} />
+              <Route path="/terms" element={<Terms />} />
               <Route path="/login" element={<Login />} />
               <Route path="*" element={<NotFound />} />
             </Routes>

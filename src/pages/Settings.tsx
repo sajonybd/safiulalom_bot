@@ -1,5 +1,5 @@
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { User, Lock, Bell, Globe, Palette, Save, Loader2 } from "lucide-react";
+import { User, Lock, Bell, Globe, Palette, Save, Loader2, Database, Download, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +17,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { toast } from "sonner";
+import { ConfirmModal } from "@/components/dashboard/ConfirmModal";
 
 const Settings = () => {
   const { language, currency, setLanguage, setCurrency, t } = useSettings();
@@ -33,6 +34,46 @@ const Settings = () => {
   const [tgSyncId, setTgSyncId] = useState("");
   const [tgSyncCode, setTgSyncCode] = useState("");
   const [isSyncing, setIsSyncing] = useState(false);
+  const [preferences, setPreferences] = useState<any>({});
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+
+  useEffect(() => {
+    if (userData?.user?.preferences) {
+      setPreferences(userData.user.preferences);
+    }
+  }, [userData]);
+
+  const handlePreferenceChange = async (key: string, value: boolean) => {
+    const newPrefs = { ...preferences, [key]: value };
+    setPreferences(newPrefs);
+    try {
+      await updateProfile.mutateAsync({
+        preferences: newPrefs
+      });
+    } catch (err) {
+      setPreferences(preferences);
+    }
+  };
+
+  const handleDeleteAccount = async () => {
+    setIsDeleting(true);
+    try {
+       const res = await fetch("/api/ui_user", { method: "DELETE" });
+       const data = await res.json();
+       if (data.ok) {
+         toast.success(data.message);
+         setTimeout(() => window.location.href = "/api/ui_logout", 2000);
+       } else {
+         toast.error(data.error || "Failed to delete account");
+       }
+    } catch (err) {
+      toast.error("An error occurred");
+    } finally {
+      setIsDeleting(false);
+      setIsDeleteDialogOpen(false);
+    }
+  };
 
   useEffect(() => {
     if (userData?.user) {
@@ -91,7 +132,7 @@ const Settings = () => {
         <p className="text-sm text-muted-foreground">{t("manage_account_desc")}</p>
       </div>
 
-      <Tabs defaultValue="profile" className="space-y-5">
+    <Tabs defaultValue="profile" className="space-y-5">
         <div className="w-full overflow-x-auto pb-1 -mx-4 px-4 sm:mx-0 sm:px-0">
           <TabsList className="bg-muted inline-flex w-auto sm:w-full sm:flex h-auto p-1">
             <TabsTrigger value="profile" className="gap-1.5 text-xs py-2 px-4 min-w-fit">
@@ -102,6 +143,9 @@ const Settings = () => {
             </TabsTrigger>
             <TabsTrigger value="notifications" className="gap-1.5 text-xs py-2 px-4 min-w-fit">
               <Bell className="w-3.5 h-3.5" /> {t("notifications")}
+            </TabsTrigger>
+            <TabsTrigger value="data" className="gap-1.5 text-xs py-2 px-4 min-w-fit">
+              <Database className="w-3.5 h-3.5" /> {t("data")}
             </TabsTrigger>
             <TabsTrigger value="appearance" className="gap-1.5 text-xs py-2 px-4 min-w-fit">
               <Palette className="w-3.5 h-3.5" /> {t("appearance")}
@@ -249,6 +293,20 @@ const Settings = () => {
               <p className="text-[10px] text-muted-foreground italic">{t("password_managed_externally")}</p>
             </div>
           </div>
+
+          <div className="rounded-xl border border-red-200 bg-red-50/30 p-5 space-y-4">
+            <h3 className="text-sm font-semibold text-red-600">{t("delete_account")}</h3>
+            <p className="text-xs text-red-600/80">{t("delete_account_desc")}</p>
+            <Button 
+              variant="destructive" 
+              size="sm" 
+              onClick={() => setIsDeleteDialogOpen(true)}
+              disabled={isDeleting}
+            >
+              {isDeleting ? <Loader2 className="w-3.5 h-3.5 animate-spin mr-2" /> : null}
+              {t("delete_account")}
+            </Button>
+          </div>
         </TabsContent>
 
         {/* Notifications */}
@@ -256,18 +314,122 @@ const Settings = () => {
           <div className="rounded-xl border border-border bg-card p-5 space-y-4">
             <h3 className="text-sm font-semibold text-foreground">{t("notification_prefs")}</h3>
             {[
-              { label: t('telegram_notif'), desc: t('telegram_notif_desc'), default: true },
-              { label: t('daily_summary'), desc: t('daily_summary_desc'), default: true },
-              { label: t('lenden_alerts'), desc: t('lenden_alerts_desc'), default: true },
+              { id: 'telegram_notifications', label: t('telegram_notif'), desc: t('telegram_notif_desc') },
+              { id: 'daily_summary_9pm', label: t('daily_summary'), desc: t('daily_summary_desc') },
+              { id: 'lenden_alerts', label: t('lenden_alerts'), desc: t('lenden_alerts_desc') },
             ].map((pref) => (
-              <div key={pref.label} className="flex items-center justify-between py-2">
+              <div key={pref.id} className="flex items-center justify-between py-2">
                 <div>
                   <p className="text-sm text-foreground">{pref.label}</p>
                   <p className="text-xs text-muted-foreground">{pref.desc}</p>
                 </div>
-                <Switch defaultChecked={pref.default} />
+                <Switch 
+                  checked={preferences[pref.id] === true} 
+                  onCheckedChange={(checked) => handlePreferenceChange(pref.id, checked)}
+                />
               </div>
             ))}
+          </div>
+        </TabsContent>
+
+        {/* Data Management */}
+        <TabsContent value="data">
+          <div className="rounded-xl border border-border bg-card p-5 space-y-6">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-primary/10 rounded-lg">
+                <Database className="w-5 h-5 text-primary" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-foreground">{t("data_management")}</h3>
+                <p className="text-xs text-muted-foreground">{t("data_desc")}</p>
+              </div>
+            </div>
+
+            <div className="grid gap-4">
+              <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/20">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-foreground">{t("export_data")}</p>
+                  <p className="text-[11px] text-muted-foreground">{t("export_desc")}</p>
+                </div>
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  className="gap-2 h-9 px-4 rounded-xl hover:bg-primary/5 hover:text-primary transition-all shadow-sm"
+                  onClick={async () => {
+                    try {
+                      const res = await fetch("/api/ui_data_export");
+                      const blob = await res.blob();
+                      const url = window.URL.createObjectURL(blob);
+                      const a = document.createElement("a");
+                      a.href = url;
+                      const date = new Date().toISOString().split('T')[0];
+                      a.download = `life-os-export-${date}.json`;
+                      a.click();
+                      toast.success(t("export_success"));
+                    } catch (e) {
+                      toast.error(t("export_failed"));
+                    }
+                  }}
+                >
+                  <Download className="w-3.5 h-3.5" /> {t("export")}
+                </Button>
+              </div>
+
+              <div className="flex items-center justify-between p-4 rounded-xl border border-border bg-muted/20">
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-foreground">{t("import_data")}</p>
+                  <p className="text-[11px] text-muted-foreground">{t("import_desc")}</p>
+                </div>
+                <div>
+                  <input 
+                    type="file" 
+                    id="import-file" 
+                    className="hidden" 
+                    accept=".json" 
+                    onChange={async (e) => {
+                      const file = e.target.files?.[0];
+                      if (!file) return;
+                      
+                      const reader = new FileReader();
+                      reader.onload = async (event) => {
+                        try {
+                          const json = JSON.parse(event.target?.result as string);
+                          const res = await fetch("/api/ui_data_import", {
+                            method: "POST",
+                            headers: { "Content-Type": "application/json" },
+                            body: JSON.stringify({ importedData: json })
+                          });
+                          const data = await res.json();
+                          if (data.ok) {
+                            toast.success(t("import_success"));
+                            window.location.reload();
+                          } else {
+                            toast.error(data.error || t("import_failed"));
+                          }
+                        } catch (err) {
+                          toast.error(t("invalid_json"));
+                        }
+                      };
+                      reader.readAsText(file);
+                    }}
+                  />
+                  <Button 
+                    size="sm" 
+                    variant="outline" 
+                    className="gap-2 h-9 px-4 rounded-xl hover:bg-green-500/5 hover:text-green-600 transition-all shadow-sm"
+                    onClick={() => document.getElementById("import-file")?.click()}
+                  >
+                    <Upload className="w-3.5 h-3.5" /> {t("import")}
+                  </Button>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-3 bg-yellow-500/5 border border-yellow-500/10 rounded-lg">
+              <p className="text-[10px] text-yellow-700 leading-relaxed font-medium">
+                <strong>{t("safety_tip")}:</strong> {t("import_merge_tip")}
+              </p>
+            </div>
           </div>
         </TabsContent>
 
@@ -316,6 +478,16 @@ const Settings = () => {
         </TabsContent>
       </Tabs>
     </div>
+
+    <ConfirmModal 
+      isOpen={isDeleteDialogOpen}
+      onOpenChange={setIsDeleteDialogOpen}
+      onConfirm={handleDeleteAccount}
+      title={t("delete_account")}
+      description={t("delete_account_confirm")}
+      confirmText={t("delete_account")}
+      variant="destructive"
+    />
     </DashboardLayout>
   );
 };

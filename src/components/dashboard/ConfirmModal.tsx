@@ -36,7 +36,7 @@ export function ConfirmModal({
 
   return (
     <AlertDialog open={isOpen} onOpenChange={onOpenChange}>
-      <AlertDialogContent className="rounded-2xl border-border bg-card shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+      <AlertDialogContent className="rounded-2xl border-border bg-card shadow-2xl animate-in fade-in zoom-in-95 duration-200 p-4 md:p-5 gap-3">
         <AlertDialogHeader>
           <AlertDialogTitle className="text-xl font-bold text-foreground">
             {title || t("confirm_action") || "Are you sure?"}

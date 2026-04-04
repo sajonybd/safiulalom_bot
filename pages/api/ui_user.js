@@ -21,17 +21,21 @@ async function handler(req, res) {
 
       res.statusCode = 200;
       res.setHeader("content-type", "application/json; charset=utf-8");
+      
+      const isWhatsApp = !!user.whatsapp_user_id;
+      
       res.end(JSON.stringify({ 
         ok: true, 
         user: {
-          telegramId: user.telegram_user_id,
+          telegramId: isWhatsApp ? user.whatsapp_user_id : user.telegram_user_id,
           linkedTelegramId: user.linked_telegram_id || null,
-          username: user.username,
+          username: user.username || (isWhatsApp ? user.phone : null),
           firstName: user.first_name,
           lastName: user.last_name,
           email: user.email || "",
           phone: user.phone || "",
-          provider: user.provider || "telegram"
+          provider: isWhatsApp ? "whatsapp" : (user.provider || "telegram"),
+          preferences: user.preferences || {}
         } 
       }));
       return;
@@ -39,11 +43,27 @@ async function handler(req, res) {
 
     if (req.method === "PATCH") {
       const updates = req.body;
+      const { updateUserPreferences } = require("../../lib/users");
+      
+      if (updates.preferences) {
+        await updateUserPreferences(userId, updates.preferences);
+      }
+
       const updated = await updateUserProfile(userId, updates);
       
       res.statusCode = 200;
       res.setHeader("content-type", "application/json; charset=utf-8");
       res.end(JSON.stringify({ ok: true, user: updated }));
+      return;
+    }
+
+    if (req.method === "DELETE") {
+      const { requestAccountDeletion } = require("../../lib/users");
+      await requestAccountDeletion(userId);
+      
+      res.statusCode = 200;
+      res.setHeader("content-type", "application/json; charset=utf-8");
+      res.end(JSON.stringify({ ok: true, message: "Account scheduled for deletion. It will be permanently removed in 3 days unless you log in again." }));
       return;
     }
 

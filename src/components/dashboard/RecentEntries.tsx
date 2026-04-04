@@ -1,5 +1,6 @@
 import { ArrowDownLeft, ArrowUpRight, Repeat, Clock, Loader2, Pencil, Trash2 } from "lucide-react";
 import { useLedger, useDeleteEntry } from "@/hooks/useLedger";
+import { useTeam } from "@/hooks/useTeam";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useState } from "react";
 import { TransactionModal } from "./TransactionModal";
@@ -8,11 +9,16 @@ import { ConfirmModal } from "./ConfirmModal";
 
 export function RecentEntries() {
   const { data, isLoading } = useLedger();
+  const { data: teamData } = useTeam();
   const { t, currencySymbol } = useSettings();
   const [editingEntry, setEditingEntry] = useState<any>(null);
   const [deletingId, setDeletingId] = useState<string | null>(null);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
   const deleteMutation = useDeleteEntry();
+
+  const activeFamilyId = teamData?.activeFamilyId;
+  const currentTeam = teamData?.myFamilies?.find((f: any) => String(f.family_id) === String(activeFamilyId));
+  const myRole = currentTeam?.role || 'VIEWER';
 
   const kindConfig: Record<string, { icon: any; color: string; label: string }> = {
     in: { icon: ArrowDownLeft, color: 'text-primary', label: t('income') },
@@ -104,25 +110,27 @@ export function RecentEntries() {
                     <p className={`text-xs font-mono font-bold ${isInflow ? 'text-primary' : 'text-foreground'}`}>
                       {isInflow ? '+' : '-'}{currencySymbol}{Number(entry.amount).toLocaleString()}
                     </p>
-                    <div className="flex items-center gap-1.5 translate-x-1 opacity-70 group-hover:opacity-100 transition-all">
-                      <button 
-                        onClick={() => setEditingEntry(entry)}
-                        className="p-1.5 hover:bg-primary/15 hover:text-primary rounded-md text-muted-foreground transition-all duration-200"
-                        title={t('edit')}
-                      >
-                        <Pencil className="w-3.5 h-3.5" />
-                      </button>
-                      <button 
-                        onClick={() => {
-                          setDeletingId(entry.id);
-                          setIsConfirmOpen(true);
-                        }}
-                        className="p-1.5 hover:bg-destructive/15 hover:text-destructive rounded-md text-muted-foreground transition-all duration-200"
-                        title={t('delete')}
-                      >
-                        <Trash2 className="w-3.5 h-3.5" />
-                      </button>
-                    </div>
+                    {myRole !== 'VIEWER' && (
+                      <div className="flex items-center gap-1.5 translate-x-1 opacity-70 group-hover:opacity-100 transition-all">
+                        <button 
+                          onClick={() => setEditingEntry(entry)}
+                          className="p-1.5 hover:bg-primary/15 hover:text-primary rounded-md text-muted-foreground transition-all duration-200"
+                          title={t('edit')}
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                        </button>
+                        <button 
+                          onClick={() => {
+                            setDeletingId(entry.id);
+                            setIsConfirmOpen(true);
+                          }}
+                          className="p-1.5 hover:bg-destructive/15 hover:text-destructive rounded-md text-muted-foreground transition-all duration-200"
+                          title={t('delete')}
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -140,7 +148,7 @@ export function RecentEntries() {
             amount: editingEntry.amount.toString(),
             note: editingEntry.note,
             person: editingEntry.person,
-            date: editingEntry.created_at,
+            date: editingEntry.created_at ? new Date(editingEntry.created_at).toISOString().split('T')[0] : undefined,
             sourceAccount: editingEntry.source_account,
             destinationAccount: editingEntry.destination_account,
           }}

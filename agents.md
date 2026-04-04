@@ -99,13 +99,17 @@ Track shared bazar and daily meals effortlessly.
 ### 3. The "Multi-Platform Connector" (COMPLETED)
 - **Feature**: Unified experience across **Telegram** and **WhatsApp** (via WaAPI). Both platforms share the same intelligence core and credit ledger.
 
-### 4. The "Entity & Relationship" Gap (IN PROGRESS)
-- **Need**: Robust Profiles with sub-types (Wife, Child, Shop, Vendor).
-- **Feature**: JSONB-style flexible metadata for entity-specific logic (e.g., mileage for bikes, shelf-life for inventory).
+### 4. The "Entity & Relationship" Gap (COMPLETED)
+- **Feature**: Robust Profiles with sub-types (Wife, Child, Shop, Vendor).
+- **Status**: JSONB-style flexible metadata for entity-specific logic (e.g., mileage for bikes, shelf-life for inventory).
 
-### 5. The "Admin Decision Engine" (IN PROGRESS - Phase 1 COMPLETED)
-- **Feature**: Resource management (Credit Limits).
-- **Status**: Daily 50 AI bits limit implemented. Admin dashboard for users management and credit resets.
+### 5. The "Admin Decision Engine" (COMPLETED)
+- **Feature**: Resource management (Credit Limits) & Governance.
+- **Status**: Daily 50 AI bits limit implemented. Admin dashboard for users management (Suspend/Activate), credit resets, and comprehensive system audit logs.
+
+### 6. The "Precision Team" Gap (COMPLETED)
+- **Feature**: Role-Based Access Control (RBAC).
+- **Status**: 'OWNER', 'EDITOR', and 'VIEWER' roles implemented. Owners manage members and roles, while Viewers have read-only access to sensitive financial data.
 
 ---
 
@@ -125,13 +129,14 @@ To ensure fair usage and maintain server costs, Life-OS uses a **Credit System**
 - **Daily Default**: 50 AI Bits per user.
 - **Consumption**: 1 Bit per AI natural language request. (Utility commands like `/balance` or `/summary` are FREE).
 - **Manual Upgrades**: Users can send support to `01967550181` (bKash/Nagad/Rocket) and submit screenshots to `@safiulalom` on Telegram.
-- **Admin Processing**: Admins verify the proof and upgrade the `daily_credit_limit` in the `users` collection.
+- **Admin Processing**: Admins verify the proof and upgrade the `daily_credit_limit` via the Admin Panel.
 
 ---
 
 ## 🛡 Security & Administration
-- **Suspension**: Admins can block/unblock users directly from the dashboard.
-- **Audit Logs**: Every AI interaction and transaction is persisted for history.
+- **Suspension**: Admins can block/unblock users directly from the Admin Panel.
+- **Audit Logs**: Every administrative action (team invites, role changes, name updates) is persisted in `action_logs` for transparency.
 - **Privacy**: The bot only responds in Private Chats to ensure financial confidentiality.
+- **Legal Compliance**: Dedicated [Terms of Service](/terms) and [Privacy Policy](/privacy) pages define user data rights and platform responsibilities.
 
-*Last updated during Multi-Platform and Credit System phase.*
+*Last updated during Team Management and Admin Panel phase.*

@@ -23,7 +23,9 @@ export function ChatWidget() {
   const { data: teamData } = useTeam();
   const queryClient = useQueryClient();
   const activeFamilyId = teamData?.activeFamilyId;
-  
+  const currentTeam = teamData?.myFamilies?.find((f: any) => String(f.family_id) === String(activeFamilyId));
+  const myRole = currentTeam?.role || 'VIEWER';
+
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
@@ -43,6 +45,8 @@ export function ChatWidget() {
       scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
     }
   }, [messages, isLoading]);
+
+  if (myRole === 'VIEWER') return null;
 
   const fetchHistory = async () => {
     try {

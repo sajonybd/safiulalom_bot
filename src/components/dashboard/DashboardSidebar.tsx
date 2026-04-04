@@ -99,7 +99,7 @@ export function DashboardSidebar() {
               <DropdownMenuItem 
                 key={fam.family_id} 
                 onClick={() => handleSwitchTeam(fam.family_id)}
-                className="gap-2 text-xs py-2"
+                className={`gap-2 text-xs py-2 cursor-pointer transition-all active:scale-[0.98] ${fam.family_id === activeFamilyId ? 'bg-primary/5 text-primary font-medium' : 'focus:bg-primary/5 focus:text-primary'}`}
               >
                 <div className={`w-1.5 h-1.5 rounded-full ${fam.family_id === activeFamilyId ? 'bg-primary' : 'bg-transparent border border-muted-foreground/30'}`} />
                 <span className="flex-1 truncate">{t(fam.name) || fam.name || 'Shared Team'}</span>
@@ -107,8 +107,11 @@ export function DashboardSidebar() {
               </DropdownMenuItem>
             ))}
             <DropdownMenuSeparator />
-            <DropdownMenuItem className="gap-2 text-xs py-2 text-primary focus:text-primary" onClick={() => navigate('/team')}>
-              <Plus className="w-3.5 h-3.5" /> {t("manage_teams")}
+            <DropdownMenuItem 
+              className="gap-2 text-xs py-2 text-primary focus:text-primary focus:bg-primary/5 cursor-pointer mt-1 transition-all active:scale-[0.98]" 
+              onClick={() => navigate('/team')}
+            >
+              <UsersRound className="w-3.5 h-3.5" /> {t("manage_teams")}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -153,7 +156,7 @@ export function DashboardSidebar() {
             activeClassName="bg-primary/10 text-primary font-semibold"
           >
             <Terminal className={`w-4 h-4 text-red-500`} />
-            <span className="text-red-500 font-bold uppercase tracking-widest text-[10px]">Audit Logs</span>
+            <span className="text-red-500 font-bold uppercase tracking-widest text-[10px]">Admin Panel</span>
           </NavLink>
         )}
         <div className="mt-4 px-3 flex items-center justify-between">

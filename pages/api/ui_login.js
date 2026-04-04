@@ -21,8 +21,8 @@ async function handler(req, res) {
     }
 
     const verified = await verifyAndConsumeLoginCode({ 
-      telegramUserId: telegramUserId ? Number(telegramUserId) : null, 
-      whatsappUserId, 
+      telegramUserId: telegramUserId || null, 
+      whatsappUserId: whatsappUserId || null, 
       code: cleanCode 
     });
 
@@ -42,11 +42,48 @@ async function handler(req, res) {
     const role = isAdmin ? "ADMIN" : "OWNER";
 
     const updateQuery = telegramUserId ? { telegram_user_id: Number(telegramUserId) } : { whatsapp_user_id: whatsappUserId };
+    const existingUser = await db.collection("users").findOne(updateQuery);
+
+    if (existingUser && existingUser.status === "DELETED") {
+      res.statusCode = 404;
+      res.setHeader("content-type", "application/json; charset=utf-8");
+      res.end(JSON.stringify({ ok: false, error: "Account not found" }));
+      return;
+    }
+
+    const newStatus = (existingUser && existingUser.status === "PENDING_DELETION") ? "ACTIVE" : (existingUser?.status || "ACTIVE");
+
+    const threeDaysMs = 3 * 24 * 60 * 60 * 1000;
+    const isPendingDeletion = existingUser?.status === "PENDING_DELETION";
+    const withinGracePeriod = isPendingDeletion && (new Date() - new Date(existingUser.deletion_requested_at) <= threeDaysMs);
+    
+    let finalStatus = existingUser?.status || "ACTIVE";
+    let deletionRequestedAt = existingUser?.deletion_requested_at || null;
+
+    if (isPendingDeletion) {
+      if (withinGracePeriod) {
+        finalStatus = "ACTIVE";
+        deletionRequestedAt = null;
+      } else {
+        finalStatus = "DELETED";
+        res.statusCode = 404;
+        res.setHeader("content-type", "application/json; charset=utf-8");
+        res.end(JSON.stringify({ ok: false, error: "Account not found" }));
+        // Also update the DB to mark it deleted permanently
+        await db.collection("users").updateOne(updateQuery, { $set: { status: "DELETED", updated_at: new Date() } });
+        return;
+      }
+    }
 
     await db.collection("users").updateOne(
       updateQuery,
       {
-        $set: { role },
+        $set: { 
+          role, 
+          status: finalStatus,
+          deletion_requested_at: deletionRequestedAt,
+          updated_at: new Date()
+        },
         $setOnInsert: { created_at: new Date(), ...updateQuery },
       },
       { upsert: true }

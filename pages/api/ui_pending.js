@@ -22,8 +22,17 @@ async function handler(req, res) {
       return;
     }
 
-    const { getFamilyId } = require("../../lib/users");
+    const { getFamilyId, getUserRoleInFamily } = require("../../lib/users");
     const familyId = await getFamilyId(userId);
+
+    // Permission check for mutations
+    if (req.method !== "GET") {
+      const role = await getUserRoleInFamily(userId, familyId);
+      if (role === "VIEWER") {
+        res.statusCode = 403;
+        return res.end(JSON.stringify({ ok: false, error: "Forbidden: VIEWER role cannot perform this action." }));
+      }
+    }
 
     // GET: List all pending entries
     if (req.method === "GET") {

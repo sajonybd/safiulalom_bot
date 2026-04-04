@@ -62,6 +62,12 @@ const Docs = () => {
       content: t("doc_team_desc")
     },
     {
+      title: t("doc_admin_title"),
+      icon: ShieldCheck,
+      color: "text-red-500",
+      content: t("doc_admin_desc")
+    },
+    {
       title: t("doc_wa_title"),
       icon: MessageSquare,
       color: "text-green-500",
@@ -126,7 +132,7 @@ const Docs = () => {
         </div>
 
         <Tabs defaultValue="guide" className="space-y-8">
-          <TabsList className="bg-secondary/50 p-1 rounded-xl h-12 w-full max-w-3xl overflow-x-auto overflow-y-hidden no-scrollbar flex shrink-0">
+          <TabsList className="bg-secondary/50 p-1 rounded-xl h-auto w-full flex flex-wrap gap-1 justify-start">
             <TabsTrigger value="guide" className="rounded-lg flex-1 font-bold whitespace-nowrap">🚀 {t('onboarding_title')}</TabsTrigger>
             <TabsTrigger value="basics" className="rounded-lg flex-1 font-bold whitespace-nowrap">{t('all')}</TabsTrigger>
             <TabsTrigger value="shortcuts" className="rounded-lg flex-1 font-bold whitespace-nowrap">{t('doc_shortcuts_title')}</TabsTrigger>
@@ -291,7 +297,7 @@ const Docs = () => {
                       <p className="text-muted-foreground text-sm leading-relaxed">{t('help_source_long_desc')}</p>
                    </div>
                    <div className="space-y-4 p-6 rounded-3xl bg-background/50 border border-border">
-                      <h4 className="text-xl font-bold text-accent">{t('dest_account')}</h4>
+                      <h4 className="text-xl font-bold text-blue-600 dark:text-blue-400">{t('dest_account')}</h4>
                       <p className="text-muted-foreground text-sm leading-relaxed">{t('help_dest_long_desc')}</p>
                    </div>
                 </div>
@@ -371,31 +377,31 @@ const Docs = () => {
 
           {/* Scenarios Tab */}
           <TabsContent value="scenarios" className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                <div className="glass p-10 rounded-[3rem] space-y-6 border border-primary/20 relative overflow-hidden group">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div className="glass p-8 md:p-10 rounded-[3rem] space-y-6 border border-primary/20 relative overflow-hidden group">
                   <div className="absolute -top-12 -right-12 p-20 bg-primary/5 rounded-full group-hover:scale-125 transition-transform duration-700" />
                   <Briefcase className="w-16 h-16 text-primary relative z-10" />
-                  <div className="space-y-3 relative z-10">
+                  <div className="space-y-4 relative z-10">
                     <h2 className="text-3xl font-black text-foreground">{t('scenario_office_title')}</h2>
                     <p className="text-muted-foreground leading-relaxed">
                       {t('scenario_office_desc')}
                     </p>
-                    <div className="bg-background/50 p-4 rounded-2xl border border-border mt-4">
-                       <code className="text-xs text-primary font-mono font-bold">@Boss theke 20,000 pelam #OfficeAccount e</code>
+                    <div className="bg-primary/10 p-4 rounded-2xl border border-primary/20 mt-4">
+                       <code className="text-sm text-primary font-mono font-bold break-words whitespace-normal block">@Boss theke 20,000 pelam #OfficeAccount e</code>
                     </div>
                   </div>
                 </div>
 
-                <div className="glass p-10 rounded-[3rem] space-y-6 border border-accent/20 relative overflow-hidden group">
-                  <div className="absolute -top-12 -right-12 p-20 bg-accent/5 rounded-full group-hover:scale-125 transition-transform duration-700" />
-                  <ChefHat className="w-16 h-16 text-accent relative z-10" />
-                  <div className="space-y-3 relative z-10">
+                <div className="glass p-8 md:p-10 rounded-[3rem] space-y-6 border border-orange-500/20 relative overflow-hidden group">
+                  <div className="absolute -top-12 -right-12 p-20 bg-orange-500/5 rounded-full group-hover:scale-125 transition-transform duration-700" />
+                  <ChefHat className="w-16 h-16 text-orange-500 relative z-10" />
+                  <div className="space-y-4 relative z-10">
                     <h2 className="text-3xl font-black text-foreground">{t('scenario_mess_title')}</h2>
                     <p className="text-muted-foreground leading-relaxed">
                       {t('scenario_mess_desc')}
                     </p>
-                    <div className="bg-background/50 p-4 rounded-2xl border border-border mt-4">
-                       <code className="text-xs text-accent font-mono font-bold">Meal log: @Rahim 2, @Ami 1, @Robin 2</code>
+                    <div className="bg-orange-500/10 p-4 rounded-2xl border border-orange-500/20 mt-4">
+                       <code className="text-sm text-orange-600 dark:text-orange-400 font-mono font-bold break-words whitespace-normal block">Meal log: @Rahim 2, @Ami 1, @Robin 2</code>
                     </div>
                   </div>
                 </div>
