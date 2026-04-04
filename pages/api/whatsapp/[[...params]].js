@@ -1,6 +1,6 @@
-const { upsertWhatsAppUser } = require("../../lib/users");
-const { financeQueue, executeFinanceTask, USE_REDIS } = require("../../lib/queue");
-const { getDb } = require("../../lib/db");
+const { upsertWhatsAppUser } = require("../../../lib/users");
+const { financeQueue, executeFinanceTask, USE_REDIS } = require("../../../lib/queue");
+const { getDb } = require("../../../lib/db");
 
 async function handler(req, res) {
   try {
@@ -96,7 +96,7 @@ async function handler(req, res) {
 
     // 2. Handle Quick Commands (Bypassing AI to save credits)
     const lowerText = text.toLowerCase();
-    const { sendWhatsAppMessage } = require("../../lib/whatsapp");
+    const { sendWhatsAppMessage } = require("../../../lib/whatsapp");
 
     if (["hi", "hello", "start", "hey"].includes(lowerText)) {
       const welcome = [
@@ -119,7 +119,7 @@ async function handler(req, res) {
     }
 
     if (lowerText === "login" || lowerText === "/login") {
-      const { createLoginToken, createLoginCode } = require("../../lib/ui_login");
+      const { createLoginToken, createLoginCode } = require("../../../lib/ui_login");
       const appUrl = process.env.APP_URL;
 
       const { token } = await createLoginToken({ whatsappUserId: chatId });
