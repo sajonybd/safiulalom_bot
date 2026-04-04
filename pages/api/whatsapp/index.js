@@ -12,6 +12,9 @@ async function handler(req, res) {
     // In index.js, we only support query param or headers, not path params
     const providedSecret = req.query?.secret;
 
+    // TRIAL MODE: Always send to this number since WaAPI protects other numbers
+    const targetChatId = "8801969512000@c.us"; 
+
     if (req.method !== "POST") {
       res.statusCode = 200;
       res.end("Send POST updates from WaAPI to this endpoint.");
@@ -122,7 +125,9 @@ async function handler(req, res) {
         `• *login* - Dashboard access`,
         `• *help* - How to use`,
       ].join("\n");
-      await sendWhatsAppMessage(chatId, welcome);
+      console.log(`[WhatsApp] Sending welcome to ${targetChatId}`);
+      const result = await sendWhatsAppMessage(targetChatId, welcome);
+      console.log(`[WhatsApp] Result for ${targetChatId}:`, result ? "SUCCESS" : "FAILED");
       res.statusCode = 200;
       res.end("OK");
       return;
@@ -149,7 +154,9 @@ async function handler(req, res) {
         `_Note: Link expires in 60 minutes._`,
       ].join("\n");
 
-      await sendWhatsAppMessage(chatId, reply);
+      console.log(`[WhatsApp] Sending login link to ${targetChatId}`);
+      const result = await sendWhatsAppMessage(targetChatId, reply);
+      console.log(`[WhatsApp] Result for ${targetChatId}:`, result ? "SUCCESS" : "FAILED");
       res.statusCode = 200;
       res.end("OK");
       return;
@@ -168,7 +175,9 @@ async function handler(req, res) {
         ``,
         `Just talk to me normally!`,
       ].join("\n");
-      await sendWhatsAppMessage(chatId, help);
+      console.log(`[WhatsApp] Sending help to ${targetChatId}`);
+      const result = await sendWhatsAppMessage(targetChatId, help);
+      console.log(`[WhatsApp] Result for ${targetChatId}:`, result ? "SUCCESS" : "FAILED");
       res.statusCode = 200;
       res.end("OK");
       return;
