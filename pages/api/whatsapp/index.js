@@ -3,13 +3,14 @@ const { financeQueue, executeFinanceTask, USE_REDIS } = require("../../../lib/qu
 const { getDb } = require("../../../lib/db");
 
 async function handler(req, res) {
+  res.setHeader('X-Debug-Handler', 'NEW-HANDLER-INDEX');
+  console.log(`[WhatsApp Webhook] Received ${req.method} request at ${req.url}`);
+  
   try {
     const configSecret = process.env.WAAPI_WEBHOOK_SECRET;
-    const configInstanceId = process.env.WAAPI_INSTANCE_ID;
 
-    // Support both query param (?secret=...) and path parameter (/api/whatsapp/SECRET)
-    const urlParams = req.query?.params || [];
-    const providedSecret = req.query?.secret || urlParams[0];
+    // In index.js, we only support query param or headers, not path params
+    const providedSecret = req.query?.secret;
 
     if (req.method !== "POST") {
       res.statusCode = 200;
@@ -24,21 +25,29 @@ async function handler(req, res) {
       return;
     }
 
-    // WaAPI sends these fields in the main JSON body
+    // Security Checks
     const { event, data, instanceId } = body;
+    const configInstanceId = String(process.env.WAAPI_INSTANCE_ID);
+    const bypassSecret = "AkdVHNAaJNAmTlrlC6abUYngjpr6FyWP"; 
+    const incomingBypass = req.headers['x-vercel-protection-bypass'];
     
-    // 0. Perform Security Check
-    if (configSecret) {
-      const isSecretMatch = providedSecret === configSecret;
-      const isInstanceMatch = String(instanceId) === String(configInstanceId);
-      
-      // We check if it's authorized via secret or instance ID
-      if (!isSecretMatch && !isInstanceMatch) {
-         console.warn(`[WhatsApp] Security Warning: Unauthorized request from instance ${instanceId}. (Expected Instance: ${configInstanceId}, Provided Secret: ${providedSecret})`);
-         // We allow it for now so the user isn't stuck with 401s, 
-         // but we strictly log the mismatches for them to see in the dashboard.
-      }
+    // 1. Check if the Vercel bypass header is present and correct
+    if (incomingBypass !== bypassSecret) {
+      console.warn("🚫 Blocked: Request did not provide the correct Vercel bypass header.");
+      res.statusCode = 401;
+      res.end("Unauthorized: Missing protection bypass.");
+      return;
     }
+
+    // 2. Standard WaAPI Checks (Instance ID)
+    if (String(instanceId) !== configInstanceId) {
+      console.warn(`🚫 Blocked: Unauthorized instance ${instanceId}. Expected ${configInstanceId}.`);
+      res.statusCode = 401;
+      res.end("Unauthorized: Invalid instance ID.");
+      return;
+    }
+
+    console.log("✅ Webhook authenticated and processing message...");
 
     // 0. Save Log for Admin
     try {
