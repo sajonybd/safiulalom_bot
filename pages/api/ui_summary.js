@@ -26,12 +26,19 @@ async function handler(req, res) {
     const { getFamilyId } = require("../../lib/users");
     const familyId = await getFamilyId(userId);
 
+    const { countPendingEntries } = require("../../lib/pending_entries");
+    const { categorySummary, monthlyComparison, bikeStats } = require("../../lib/ledger");
     const { from, to } = monthRange(new Date());
-    const [s, all, accs] = await Promise.all([
+    const [s, all, accs, pendingCount, categories, comparison, fuel] = await Promise.all([
       summary({ familyId, from, to }),
       totalsAllTime({ familyId }),
       accountsBalances({ familyId }),
+      countPendingEntries({ userId, familyId }),
+      categorySummary({ familyId, from, to }),
+      monthlyComparison({ familyId, category: "Bajar" }),
+      bikeStats({ familyId }),
     ]);
+
     res.statusCode = 200;
     res.setHeader("content-type", "application/json; charset=utf-8");
     res.end(
@@ -44,6 +51,7 @@ async function handler(req, res) {
           expense: formatMoney(s.expense),
           net: formatMoney(s.net),
           counts: s.counts,
+          categories,
         },
         allTime: {
           income: formatMoney(all.income),
@@ -54,6 +62,11 @@ async function handler(req, res) {
           counts: all.counts,
         },
         accounts: accs,
+        charts: {
+           bajar: comparison,
+           fuel,
+        },
+        pendingCount,
       })
     );
   } catch (err) {

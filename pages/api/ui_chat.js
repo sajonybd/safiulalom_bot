@@ -26,8 +26,13 @@ export default async function handler(req, res) {
       .limit(20)
       .toArray();
 
+    const { getUserByTelegramId } = require("../../lib/users");
+    const user = await getUserByTelegramId(userId);
+
     return res.status(200).json({
       ok: true,
+      available_credits: user?.available_credits ?? 50,
+      daily_limit: user?.daily_credit_limit ?? 50,
       messages: history.reverse().map((m) => ({
         role: m.role,
         content: m.content,
@@ -53,17 +58,23 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1. Get history for context (last 5-10 messages)
+    const { checkAndConsumeCredit } = require("../../lib/users");
+    const creditCheck = await checkAndConsumeCredit(userId);
+    if (!creditCheck.ok) {
+      return res.status(403).json({ ok: false, error: creditCheck.error });
+    }
+
+    // 1. Get history for context (last 5 messages) filtered by source
     const recentHistory = await db
       .collection("chat_messages")
-      .find({ user_id: userId })
+      .find({ family_id: familyId, source: "web" })
       .sort({ created_at: -1 })
-      .limit(10)
+      .limit(5)
       .toArray();
 
     const historyForAi = recentHistory.reverse().map((m) => ({
       role: m.role,
-      content: m.content,
+      content: (m.role === "assistant" && m.metadata?.raw_response) ? m.metadata.raw_response : m.content,
     }));
 
     // 2. Generate AI response
@@ -73,24 +84,41 @@ export default async function handler(req, res) {
       familyId,
       text,
       history: historyForAi,
+      source: "web"
     });
 
-    // 3. Extract and execute action
-    const actionData = extractAction(assistantReplyRaw);
-    const cleanReply = assistantReplyRaw.replace(/<action>[\s\S]*?<\/action>/, "").trim();
+    // 3. Extract and execute actions
+    const actions = extractAction(assistantReplyRaw);
+    let cleanReply = assistantReplyRaw.replace(/<action>[\s\S]*?<\/action>/gi, "").trim();
+    // Also remove any trailing incomplete <action> tag to prevent it polluting the chat UI
+    cleanReply = cleanReply.replace(/<action>[\s\S]*$/gi, "").trim();
 
-    let actionResult = null;
-    if (actionData) {
+    const actionResults = [];
+    const { financeQueue, USE_REDIS } = require("../../lib/queue");
+
+    for (const action of actions) {
+      let params = action.params;
+      if (!params) {
+        const { action: actionName, ...rest } = action;
+        params = rest || {};
+      }
+
+      const data = {
+        userId,
+        familyId,
+        action: action.action,
+        params: params,
+      };
+
+      // We run UI actions synchronously to ensure the ledger and logs are updated immediately 
+      // before the chat response is finalized. This prevents "QUEUED" delays 
+      // and ensures the user sees their new entries instantly.
       try {
-        actionResult = await handleChatAction({
-          userId,
-          familyId,
-          action: actionData.action,
-          params: actionData.params,
-        });
+        const result = await handleChatAction(data);
+        actionResults.push({ action: action.action, result, params: params });
       } catch (actionErr) {
-        console.error("Action execution failed:", actionErr);
-        actionResult = { ok: false, error: actionErr.message };
+        console.error(`Action ${action.action} failed:`, actionErr);
+        actionResults.push({ action: action.action, error: actionErr.message, params: params });
       }
     }
 
@@ -101,6 +129,7 @@ export default async function handler(req, res) {
     const userMsg = {
       user_id: userId,
       family_id: familyId,
+      source: "web",
       role: "user",
       content: text,
       created_at: userTime,
@@ -108,13 +137,14 @@ export default async function handler(req, res) {
     const assistantMsg = {
       user_id: userId,
       family_id: familyId,
+      source: "web",
       role: "assistant",
       content: cleanReply,
       metadata: {
-        action: actionData ? actionData.action : null,
-        action_params: actionData ? actionData.params : null,
-        action_result: actionResult,
-        is_transaction: actionData?.action === "ADD_TRANSACTION",
+        raw_response: assistantReplyRaw, // Save raw for debugging
+        actions: actions,
+        results: actionResults,
+        is_transaction: actions.some(a => a.action === "ADD_TRANSACTION"),
       },
       created_at: assistantTime,
     };
@@ -124,8 +154,9 @@ export default async function handler(req, res) {
     return res.status(200).json({
       ok: true,
       reply: cleanReply,
-      action: actionData ? actionData.action : null,
-      result: actionResult,
+      actions: actions,
+      results: actionResults,
+      isTransaction: actions.some(a => a.action === "ADD_TRANSACTION"),
     });
   } catch (err) {
     console.error("Chat API error:", err);

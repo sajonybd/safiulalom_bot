@@ -55,7 +55,7 @@ async function handler(req, res) {
     }
 
     if (req.method === "POST") {
-      const { name, type, subType, groupId, metadata } = req.body || {};
+      const { name, type, subType, groupId, phone, email, metadata } = req.body || {};
       
       if (!name) {
         res.statusCode = 400;
@@ -71,6 +71,8 @@ async function handler(req, res) {
         type,
         subType,
         groupId,
+        phone,
+        email,
         metadata,
       });
 
@@ -94,6 +96,8 @@ async function handler(req, res) {
       if (req.body.type !== undefined) updates.type = req.body.type;
       if (req.body.subType !== undefined) updates.subType = req.body.subType;
       if (req.body.groupId !== undefined) updates.groupId = req.body.groupId;
+      if (req.body.phone !== undefined) updates.phone = req.body.phone;
+      if (req.body.email !== undefined) updates.email = req.body.email;
       if (req.body.metadata !== undefined) updates.metadata = req.body.metadata;
 
       const result = await updateEntity({ familyId, id, updates });

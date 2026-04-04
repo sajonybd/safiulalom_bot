@@ -1,0 +1,22 @@
+services:
+  app:
+    build: .
+    container_name: safiulalom-bot-app
+    ports:
+      - "3000:3000"
+    env_file: .env
+    depends_on:
+      - redis
+
+  redis:
+    image: redis:7.2-alpine
+    container_name: redis-local
+    restart: always
+    ports:
+      - "6379:6379"
+    command: redis-server --requirepass your_redis_password
+    volumes:
+      - redis_data:/data
+
+volumes:
+  redis_data:

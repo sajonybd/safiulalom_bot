@@ -64,25 +64,33 @@ const Reports = () => {
         <h3 className="text-sm font-semibold text-foreground mb-4 flex items-center gap-2">
           <TrendingUp className="w-4 h-4 text-primary" /> {t("category_breakdown")}
         </h3>
-        <p className="text-sm text-muted-foreground mb-4">{t("awaiting_data")}</p>
-        <div className="space-y-3 opacity-50 pointer-events-none">
-          {[
-            { category: 'Bajar / Groceries', amount: 10200, pct: 31 },
-            { category: 'Rent', amount: 15000, pct: 46 },
-            { category: 'Transport / Fuel', amount: 3500, pct: 11 },
-            { category: 'Medicine', amount: 2400, pct: 7 },
-            { category: 'Subscriptions', amount: 1750, pct: 5 },
-          ].map((cat) => (
-            <div key={cat.category} className="flex items-center gap-4">
-              <span className="text-sm text-foreground w-40 truncate">{cat.category}</span>
-              <div className="flex-1 bg-muted rounded-full h-2">
-                <div className="bg-primary rounded-full h-2 transition-all" style={{ width: `${cat.pct}%` }} />
+        {isLoading ? (
+          <div className="py-4 flex justify-center">
+            <Loader2 className="w-6 h-6 animate-spin text-primary" />
+          </div>
+        ) : s.categories?.length > 0 ? (
+          <div className="space-y-4">
+            {s.categories.map((cat: any) => (
+              <div key={cat.category} className="space-y-1.5">
+                <div className="flex items-center justify-between text-sm">
+                  <span className="text-foreground font-medium">{cat.category}</span>
+                  <div className="flex items-center gap-2">
+                    <span className="text-muted-foreground font-mono">{currencySymbol}{Number(cat.total).toLocaleString()}</span>
+                    <Badge variant="secondary" className="text-[10px] h-4 px-1">{cat.pct}%</Badge>
+                  </div>
+                </div>
+                <div className="flex-1 bg-muted/30 rounded-full h-1.5 overflow-hidden">
+                  <div 
+                    className="bg-primary rounded-full h-full transition-all duration-500" 
+                    style={{ width: `${cat.pct}%` }} 
+                  />
+                </div>
               </div>
-              <span className="text-xs font-mono text-muted-foreground w-20 text-right">৳{cat.amount.toLocaleString()}</span>
-              <Badge variant="outline" className="text-xs">{cat.pct}%</Badge>
-            </div>
-          ))}
-        </div>
+            ))}
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground py-4 text-center">{t("no_data_available") || "No category data available yet"}</p>
+        )}
       </div>
     </div>
     </DashboardLayout>

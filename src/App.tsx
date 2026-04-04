@@ -11,6 +11,8 @@ import Lenden from "./pages/Lenden";
 import Reports from "./pages/Reports";
 import Team from "./pages/Team";
 import Settings from "./pages/Settings";
+import Docs from "./pages/Docs";
+import Logs from "./pages/Logs";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import { AuthGuard } from "@/components/AuthGuard";
@@ -34,6 +36,8 @@ const App = () => (
               <Route path="/lenden" element={<AuthGuard><Lenden /></AuthGuard>} />
               <Route path="/reports" element={<AuthGuard><Reports /></AuthGuard>} />
               <Route path="/team" element={<AuthGuard><Team /></AuthGuard>} />
+              <Route path="/docs" element={<AuthGuard><Docs /></AuthGuard>} />
+              <Route path="/logs" element={<AuthGuard><Logs /></AuthGuard>} />
               <Route path="/settings" element={<AuthGuard><Settings /></AuthGuard>} />
               <Route path="/login" element={<Login />} />
               <Route path="*" element={<NotFound />} />

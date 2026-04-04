@@ -83,6 +83,7 @@ async function handler(req, res) {
           "fund_received",
           "settlement_in",
           "settlement_out",
+          "transfer",
         ].includes(kind)
       ) {
         res.statusCode = 400;
@@ -199,11 +200,18 @@ async function handler(req, res) {
       const noteRaw = req.body && req.body.note;
       const personRaw = req.body && req.body.person;
       const dateRaw = req.body && req.body.date;
+      const kindRaw = req.body && req.body.kind;
+      const sourceAccountRaw = req.body && req.body.sourceAccount;
+      const destinationAccountRaw = req.body && req.body.destinationAccount;
+
       const amount = amountRaw === undefined ? undefined : parseAmount(amountRaw);
       const note = noteRaw === undefined ? undefined : String(noteRaw).trim();
       const person = personRaw === undefined ? undefined : String(personRaw).trim();
       const createdAt =
         dateRaw === undefined ? undefined : parseDateInput(dateRaw);
+      const kind = kindRaw === undefined ? undefined : String(kindRaw).trim();
+      const sourceAccount = sourceAccountRaw === undefined ? undefined : String(sourceAccountRaw).trim();
+      const destinationAccount = destinationAccountRaw === undefined ? undefined : String(destinationAccountRaw).trim();
 
       if (amountRaw !== undefined && amount === null) {
         res.statusCode = 400;
@@ -217,12 +225,6 @@ async function handler(req, res) {
         res.end(JSON.stringify({ ok: false, error: "invalid note" }));
         return;
       }
-      if (personRaw !== undefined && !person) {
-        res.statusCode = 400;
-        res.setHeader("content-type", "application/json; charset=utf-8");
-        res.end(JSON.stringify({ ok: false, error: "invalid person" }));
-        return;
-      }
       if (dateRaw !== undefined && !createdAt) {
         res.statusCode = 400;
         res.setHeader("content-type", "application/json; charset=utf-8");
@@ -230,24 +232,15 @@ async function handler(req, res) {
         return;
       }
 
-      if (
-        amount === undefined &&
-        note === undefined &&
-        person === undefined &&
-        createdAt === undefined
-      ) {
-        res.statusCode = 400;
-        res.setHeader("content-type", "application/json; charset=utf-8");
-        res.end(JSON.stringify({ ok: false, error: "nothing to update" }));
-        return;
-      }
-
       const result = await updateEntry({
         familyId,
         id,
+        kind,
         amount,
         note,
         person,
+        sourceAccount,
+        destinationAccount,
         createdAt,
       });
       res.statusCode = result.ok ? 200 : 404;

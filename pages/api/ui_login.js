@@ -10,16 +10,22 @@ async function handler(req, res) {
       return;
     }
 
-    const telegramUserId = Number(req.body && req.body.telegramUserId);
-    const code = String((req.body && req.body.code) || "").trim();
-    if (!Number.isSafeInteger(telegramUserId) || telegramUserId <= 0 || !code) {
+    const { telegramUserId, whatsappUserId, code } = req.body;
+    const cleanCode = String(code || "").trim();
+
+    if ((!telegramUserId && !whatsappUserId) || !cleanCode) {
       res.statusCode = 400;
       res.setHeader("content-type", "application/json; charset=utf-8");
-      res.end(JSON.stringify({ ok: false, error: "Invalid telegramUserId/code" }));
+      res.end(JSON.stringify({ ok: false, error: "Invalid ID/code" }));
       return;
     }
 
-    const verified = await verifyAndConsumeLoginCode({ telegramUserId, code });
+    const verified = await verifyAndConsumeLoginCode({ 
+      telegramUserId: telegramUserId ? Number(telegramUserId) : null, 
+      whatsappUserId, 
+      code: cleanCode 
+    });
+
     if (!verified.ok) {
       res.statusCode = 401;
       res.setHeader("content-type", "application/json; charset=utf-8");
@@ -27,17 +33,26 @@ async function handler(req, res) {
       return;
     }
 
-    // Ensure user exists
+    const platformId = telegramUserId ? Number(telegramUserId) : whatsappUserId;
+
+    // Ensure user exists and role is correct
     const db = await getDb();
+    const adminIds = (process.env.ADMIN_USER_IDS || "").split(",").map(id => id.trim());
+    const isAdmin = adminIds.includes(String(platformId));
+    const role = isAdmin ? "ADMIN" : "OWNER";
+
+    const updateQuery = telegramUserId ? { telegram_user_id: Number(telegramUserId) } : { whatsapp_user_id: whatsappUserId };
+
     await db.collection("users").updateOne(
-      { telegram_user_id: telegramUserId },
+      updateQuery,
       {
-        $setOnInsert: { telegram_user_id: telegramUserId, created_at: new Date() },
+        $set: { role },
+        $setOnInsert: { created_at: new Date(), ...updateQuery },
       },
       { upsert: true }
     );
 
-    const token = await createSession({ userId: telegramUserId });
+    const token = await createSession({ userId: platformId });
     res.setHeader("set-cookie", buildSessionCookie(token));
     res.statusCode = 200;
     res.setHeader("content-type", "application/json; charset=utf-8");

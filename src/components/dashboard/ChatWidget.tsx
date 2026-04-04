@@ -1,9 +1,11 @@
 import React, { useState, useEffect, useRef } from "react";
-import { MessageSquare, Send, X, Bot, Loader2, CheckCircle2, Trash2 } from "lucide-react";
+import { MessageSquare, Send, X, Bot, Loader2, CheckCircle2, Trash2, Phone } from "lucide-react";
 import { useSettings } from "@/contexts/SettingsContext";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useTeam } from "@/hooks/useTeam";
+import { ConfirmModal } from "./ConfirmModal";
+import { useQueryClient } from "@tanstack/react-query";
 
 interface Message {
   role: "user" | "assistant";
@@ -19,12 +21,15 @@ interface Message {
 export function ChatWidget() {
   const { t } = useSettings();
   const { data: teamData } = useTeam();
+  const queryClient = useQueryClient();
   const activeFamilyId = teamData?.activeFamilyId;
   
   const [isOpen, setIsOpen] = useState(false);
   const [input, setInput] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [credits, setCredits] = useState({ available: 0, limit: 0 });
   const scrollRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -45,6 +50,7 @@ export function ChatWidget() {
       const data = await res.json();
       if (data.ok) {
         setMessages(data.messages || []);
+        setCredits({ available: data.available_credits, limit: data.daily_limit });
       }
     } catch (err) {
       console.error("Failed to fetch chat history", err);
@@ -52,7 +58,6 @@ export function ChatWidget() {
   };
 
   const handleClearHistory = async () => {
-    if (!confirm(t("clear_history_confirm") || "Are you sure you want to clear this team's chat history?")) return;
     try {
       const res = await fetch("/api/ui_chat", { method: "DELETE" });
       const data = await res.json();
@@ -92,8 +97,23 @@ export function ChatWidget() {
           },
         };
         setMessages((prev) => [...prev, assistantMsg]);
-        if (data.isTransaction) {
-          toast.success(t("save_as_draft") + " (Draft)");
+
+        // If any actions were performed, show toasts and refresh queries
+        if (data.results && data.results.length > 0) {
+          data.results.forEach((resItem: any) => {
+            if (resItem.result?.ok) {
+              toast.success(resItem.result.message || `Action ${resItem.action} completed.`);
+            } else if (resItem.error) {
+              toast.error(`Action ${resItem.action} failed: ${resItem.error}`);
+            }
+          });
+
+          // Trigger UI-wide refresh and update credits
+          fetchHistory();
+          queryClient.invalidateQueries({ queryKey: ["ledger"] });
+          queryClient.invalidateQueries({ queryKey: ["summary"] });
+          queryClient.invalidateQueries({ queryKey: ["people"] });
+          queryClient.invalidateQueries({ queryKey: ["entities"] });
         }
       } else {
         toast.error(data.error || "Failed to get response");
@@ -155,7 +175,14 @@ export function ChatWidget() {
             </div>
             <div className="flex items-center gap-1">
               <button 
-                onClick={handleClearHistory}
+                onClick={() => toast.info(t("sms_upcoming"), { description: t("sms_notice") })}
+                title={t("send_sms")}
+                className="hover:bg-white/10 p-1.5 rounded-md transition-colors"
+              >
+                <Phone className="w-4 h-4 opacity-80 hover:opacity-100" />
+              </button>
+              <button 
+                onClick={() => setIsConfirmOpen(true)}
                 title={t("clear_history")}
                 className="hover:bg-white/10 p-1.5 rounded-md transition-colors"
               >
@@ -165,6 +192,11 @@ export function ChatWidget() {
                 <X className="w-5 h-5" />
               </button>
             </div>
+          </div>
+
+          <div className="bg-muted/50 px-4 py-1.5 border-b border-border flex items-center justify-between">
+            <span className="text-[10px] text-muted-foreground font-medium uppercase tracking-wider">{t("daily_limit")}</span>
+            <span className="text-[10px] font-bold text-primary">{credits.available} / {credits.limit} {t("credits")} {t("remaining")}</span>
           </div>
 
           <div className="flex-1 p-4 overflow-y-auto" ref={scrollRef}>
@@ -296,6 +328,15 @@ export function ChatWidget() {
           </div>
         )}
       </button>
+
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        onOpenChange={setIsConfirmOpen}
+        onConfirm={handleClearHistory}
+        title={t("clear_history")}
+        description={t("clear_history_confirm") || "Are you sure you want to clear this team's chat history?"}
+        confirmText={t("delete") || "Clear"}
+      />
     </div>
   );
 }

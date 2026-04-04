@@ -1,7 +1,7 @@
 export const translations: Record<string, Record<string, string>> = {
   en: {
     overview: "Overview",
-    entities: "People",
+    entities: "Entities",
     accounts: "Accounts",
     lenden: "Lenden",
     reports: "Reports",
@@ -160,6 +160,8 @@ export const translations: Record<string, Record<string, string>> = {
     cancel: "Cancel",
     confirm: "Confirm",
     loading: "Loading...",
+    delete_transaction: "Delete Transaction",
+    delete_confirm_generic: "Are you sure you want to delete this transaction? This cannot be undone.",
     
     // Entities
     directory_entities: "Directory & Entities",
@@ -229,7 +231,7 @@ export const translations: Record<string, Record<string, string>> = {
     no_members_found: "No team members found.",
     
     // Login
-    welcome_to: "Welcome to Life-OS",
+    welcome_to: "Welcome to Life-OS : Personal AI Assistant",
     login_desc: "Login or create an account to access the Financial Dashboard",
     telegram_login_desc: "Check your Telegram bot using /ui for your ID and OTP code.",
     continue_with_google: "Continue with Google",
@@ -242,6 +244,14 @@ export const translations: Record<string, Record<string, string>> = {
     login_code_placeholder: "6-digit code",
     login_success: "Successfully logged in!",
     login_failed: "Failed to login",
+    verifying_token: "Verifying token...",
+    telegram_sync: "Sync with Telegram",
+    sync_telegram_desc: "Connect your Telegram account to use the bot with this account.",
+    sync_success: "Telegram account linked successfully!",
+    sync_failed: "Failed to link Telegram account",
+    how_to_get_id_code: "Type /ui in the Telegram bot to get your ID and code.",
+    already_synced: "Already synced with Telegram",
+    link_now: "Link Now",
     enter_id_code: "Please enter both Telegram ID and the Code.",
     use_custom: "Use",
     no_results: "No results found",
@@ -261,6 +271,68 @@ export const translations: Record<string, Record<string, string>> = {
     delete_success: "Deleted successfully",
     clear_history: "Clear History",
     clear_history_confirm: "Are you sure you want to clear this team's chat history?",
+    
+    // Credits & Limits
+    credits: "Credits",
+    daily_limit: "Daily Limit",
+    out_of_credits: "You are out of credits for today.",
+    credit_used: "-1 Credit used",
+    remaining: "Remaining",
+
+    // SMS
+    send_sms: "Send SMS",
+    sms_upcoming: "SMS integration is coming soon!",
+    sms_notice: "You will be able to send ledger summaries directly via SMS.",
+    // Documentation
+    doc_intro_title: "Knowledge Base",
+    doc_intro_desc: "Everything you need to know about managing your personal resources with the SafiulAlom Bot system.",
+    doc_chat_title: "Chat Assistant",
+    doc_chat_desc: "Our AI-powered chat assistant understands natural language. You can type things like 'Ammu k 500 tk dilam' or 'Add 1000 tk to bKash' and it will automatically categorize and record the transaction. No more manual form filling unless you want to!",
+    doc_tg_title: "Telegram Integration",
+    doc_tg_desc: "Track expenses on the go! Connect your Telegram account to our bot. Simply send a message to the bot, and it will be processed instantly. Use the dashboard to review your history and reports.",
+    doc_ledger_title: "Ledger & Entities",
+    doc_ledger_desc: "Manage your 'Lenden' (receivables and payables) with ease. Track people, family members, shops, and offices as flexible entities. Group them for better organization (e.g., 'House 1 Expenses').",
+    doc_reports_title: "Advanced Reporting",
+    doc_reports_desc: "Get granular insights into your spending habits. Filter reports by person, category, or time period. See your net position across all entities instantly.",
+    doc_team_title: "Team Collaboration",
+    doc_team_desc: "Share your life-OS with family or team members. Assign roles like Owner, Editor, or Viewer to manage permissions and keep everyone in the loop.",
+    doc_security_title: "Privacy & Security",
+    doc_security_desc: "Your data is yours. We use advanced encryption and secure session management to ensure your financial history stays private and protected.",
+    quick_tips_title: "Quick Tips",
+    tip_1: "Use 'transfer' type to move money between accounts.",
+    tip_2: "Add 'openingBalance' in account metadata for accurate totals.",
+    tip_3: "Mention person names in chat to automatically link debt entries.",
+    tip_4: "Check the 'Pending Review' badge if AI interpretation needs confirmation.",
+    new_feature_instant: "New Feature: Instant Transactions",
+
+    // Help Modal (Now in Docs)
+    help_acc_flow_title: "Account Flow (Source vs Destination)",
+    help_source_long_desc: "The wallet or bank account where the money is coming FROM. For example, if you spend 100 TK from your pocket, 'Cash' is the Source.",
+    help_dest_long_desc: "The wallet or bank account where the money is going TO. For example, if you deposit money into bkash, 'bkash' is the Destination.",
+    help_lenden_long_desc: "Track who owes you and who you owe. Use 'Person Out' for lending and 'Person In' for borrowing.",
+
+    // Life-OS Philosophy & Master Types
+    doc_philosophy_title: "Why Life-OS?",
+    doc_philosophy_desc: "Life-OS is not just an expense tracker. It combines a High-Precision Ledger, a Relationship Graph for people/places, and an AI Decision Engine to simplify complex real-life money flows.",
+    doc_classification_title: "Master Transaction Types",
+    doc_classification_desc: "We simplify all life interactions into 6 core types. Everything else is just context.",
+    doc_in_title: "1. IN (Income)",
+    doc_in_desc_long: "Salary, Freelance, Gifts, Bonus, Interest, Refunds.",
+    doc_out_title: "2. OUT (Expense)",
+    doc_out_desc_long: "Bajar, Food, Rent, Bills, Medical, Travel, Mobile Recharge.",
+    doc_transfer_title: "3. TRANSFER",
+    doc_transfer_desc_long: "Internal movement between your own wallets/banks (Cash → bKash).",
+    doc_debt_given_title: "4. DEBT_GIVEN (Loan Given)",
+    doc_debt_given_desc_long: "You are the creditor. Someone owes you money.",
+    doc_debt_taken_title: "5. DEBT_TAKEN (Loan Taken)",
+    doc_debt_taken_desc_long: "You are the debtor. You owe someone money.",
+    doc_settlement_title: "6. SETTLEMENT (Loan Clear)",
+    doc_settlement_desc_long: "Paying back or receiving repayment for an existing debt.",
+    
+    doc_domains_title: "Multi-Domain Support",
+    doc_domain_personal: "Personal: Daily life, savings, and family.",
+    doc_domain_work: "Professional: Office costs, lunch, and advances.",
+    doc_domain_business: "Business: Inventory, sales, and vendor payables.",
   },
   bn: {
     overview: "ওভারভিউ",
@@ -423,6 +495,8 @@ export const translations: Record<string, Record<string, string>> = {
     cancel: "বাতিল",
     confirm: "নিশ্চিত করুন",
     loading: "লোড হচ্ছে...",
+    delete_transaction: "লেনদেন মুছে ফেলুন",
+    delete_confirm_generic: "আপনি কি নিশ্চিত যে আপনি এই লেনদেনটি মুছে ফেলতে চান? এটি আর ফিরিয়ে আনা যাবে না।",
     
     // Entities
     directory_entities: "তালিকা ও ব্যবস্থাপনা",
@@ -492,7 +566,7 @@ export const translations: Record<string, Record<string, string>> = {
     no_members_found: "কোনো টিম মেম্বার পাওয়া যায়নি।",
     
     // Login
-    welcome_to: "Life-OS এ স্বাগতম",
+    welcome_to: "Life-OS : Personal AI Assistant এ স্বাগতম",
     login_desc: "ফাইনান্সিয়াল ড্যাশবোর্ড ব্যবহারের জন্য লগইন করুন বা অ্যাকাউন্ট তৈরি করুন",
     telegram_login_desc: "আপনার আইডি এবং ওটিপি কোডের জন্য টেলিগ্রাম বোটে /ui ব্যবহার করুন।",
     continue_with_google: "গুগল দিয়ে শুরু করুন",
@@ -505,6 +579,14 @@ export const translations: Record<string, Record<string, string>> = {
     login_code_placeholder: "৬-ডিজিটের কোড",
     login_success: "সাফল্যের সাথে লগইন হয়েছে!",
     login_failed: "লগইন করতে ব্যর্থ হয়েছে",
+    verifying_token: "টোকেন যাচাই করা হচ্ছে...",
+    telegram_sync: "টেলিগ্রামের সাথে সিঙ্ক করুন",
+    sync_telegram_desc: "আপনার টেলিগ্রাম অ্যাকাউন্টটি এই অ্যাকাউন্টের সাথে যুক্ত করুন যাতে আপনি বট ব্যবহার করতে পারেন।",
+    sync_success: "টেলিগ্রাম অ্যাকাউন্ট সফলভাবে যুক্ত হয়েছে!",
+    sync_failed: "টেলিগ্রাম অ্যাকাউন্ট যুক্ত করতে ব্যর্থ হয়েছে",
+    how_to_get_id_code: "টেলিগ্রাম বোটে /ui লিখে আপনার আইডি এবং কোড সংগ্রহ করুন।",
+    already_synced: "ইতিমধ্যেই টেলিগ্রামের সাথে যুক্ত",
+    link_now: "এখনই যুক্ত করুন",
     enter_id_code: "টেলিগ্রাম আইডি এবং কোড দুটিই প্রদান করুন।",
     use_custom: "ব্যবহার করুন",
     no_results: "কোনো ফলাফল পাওয়া যায়নি",
@@ -523,6 +605,68 @@ export const translations: Record<string, Record<string, string>> = {
     save_success: "সফলভাবে সংরক্ষিত হয়েছে!",
     delete_success: "সফলভাবে মুছে ফেলা হয়েছে",
     clear_history: "ইতিহাস মুছে ফেলুন",
-    clear_history_confirm: "আপনি কি নিশ্চিত যে এই টিমের চ্যাট ইতিহাস মুছে ফেলতে চান?",
+    clear_history_confirm: "আপনি কি নিশ্চিত যে আপনি এই টিমের চ্যাট ইতিহাস মুছে ফেলতে চান?",
+
+    // Credits & Limits
+    credits: "ক্রেডিট",
+    daily_limit: "দৈনিক লিমিট",
+    out_of_credits: "আজকের জন্য আপনার ক্রেডিট শেষ হয়ে গেছে।",
+    credit_used: "-১ ক্রেডিট খরচ হয়েছে",
+    remaining: "বাকি আছে",
+
+    // SMS
+    send_sms: "SMS পাঠান",
+    sms_upcoming: "SMS ইন্টিগ্রেশন শীঘ্রই আসছে!",
+    sms_notice: "আপনি সরাসরি SMS এর মাধ্যমে লেজার সামারি পাঠাতে পারবেন।",
+    // Documentation
+    doc_intro_title: "নলেজ বেস (Knowledge Base)",
+    doc_intro_desc: "শফিউল আলম বট সিস্টেমের মাধ্যমে আপনার ব্যক্তিগত সম্পদ পরিচালনার বিষয়ে আপনার যা কিছু জানা প্রয়োজন।",
+    doc_chat_title: "চ্যাট অ্যাসিস্ট্যান্ট",
+    doc_chat_desc: "আমাদের এআই-চালিত চ্যাট অ্যাসিস্ট্যান্ট স্বাভাবিক ভাষা বুঝতে পারে। আপনি 'আম্মুকে ৫০০ টাকা দিলাম' বা 'বিকাশে ১০০০ টাকা যোগ করো' এর মতো কথা লিখতে পারেন এবং এটি স্বয়ংক্রিয়ভাবে লেনদেনটিকে শ্রেণীবদ্ধ এবং রেকর্ড করবে।",
+    doc_tg_title: "টেলিগ্রাম ইন্টিগ্রেশন",
+    doc_tg_desc: "সব সময় আপডেট থাকুন! আপনার টেলিগ্রাম অ্যাকাউন্ট আমাদের বটের সাথে সংযুক্ত করুন। কেবল বটকে একটি মেসেজ পাঠান এবং এটি তাৎক্ষণিকভাবে প্রসেস করা হবে।",
+    doc_ledger_title: "লেজার ও তালিকা",
+    doc_ledger_desc: "সহজেই আপনার 'লেনদেন' (প্রাপ্য এবং প্রদেয়) পরিচালনা করুন। ব্যক্তি, পরিবারের সদস্য, দোকান এবং অফিসগুলোকে নমনীয় তালিকা হিসেবে ট্র্যাক করুন।",
+    doc_reports_title: "উন্নত রিপোর্টিং",
+    doc_reports_desc: "আপনার ব্যয়ের অভ্যাস সম্পর্কে বিস্তারিত তথ্য পান। ব্যক্তি, বিভাগ বা সময়ের ভিত্তিতে রিপোর্ট ফিল্টার করুন।",
+    doc_team_title: "টিম কোলাবরেশন",
+    doc_team_desc: "পরিবার বা টিমের সদস্যদের সাথে আপনার লাইফ-ওএস শেয়ার করুন। পারমিশন ম্যানেজ করতে ওনার, এডিটর বা ভিউয়ারের মতো রোল অ্যাসাইন করুন।",
+    doc_security_title: "গোপনীয়তা ও নিরাপত্তা",
+    doc_security_desc: "আপনার তথ্য আপনারই। আপনার আর্থিক ইতিহাস গোপন এবং সুরক্ষিত রাখতে আমরা উন্নত এনক্রিপশন এবং নিরাপদ সেশন ম্যানেজমেন্ট ব্যবহার করি।",
+    quick_tips_title: "কুইক টিপস",
+    tip_1: "অ্যাকাউন্টগুলোর মধ্যে টাকা স্থানান্তরের জন্য 'ট্রান্সফার' (transfer) টাইপ ব্যবহার করুন।",
+    tip_2: "সঠিক হিসাবের জন্য অ্যাকাউন্ট মেটাডেটাতে 'openingBalance' যোগ করুন।",
+    tip_3: "দেনা-পাওনা স্বয়ংক্রিয়ভাবে লিঙ্ক করতে চ্যাটে ব্যক্তির নাম উল্লেখ করুন।",
+    tip_4: "এআই ব্যাখ্যার নিশ্চিতকরণের প্রয়োজন হলে 'পেন্ডিং রিভিউ' (Pending Review) ব্যাজটি চেক করুন।",
+    new_feature_instant: "নতুন ফিচার: ইনস্ট্যান্ট লেনদেন",
+
+    // Help Modal (Now in Docs)
+    help_acc_flow_title: "অ্যাকাউন্ট ফ্লো (উৎস বনাম গন্তব্য)",
+    help_source_long_desc: "যে ওয়ালেট বা ব্যাংক অ্যাকাউন্ট থেকে টাকা বের হচ্ছে। উদাহরণস্বরূপ, আপনি যদি আপনার পকেট থেকে ১০০ টাকা খরচ করেন, তবে 'ক্যাশ' হলো উৎস (Source)।",
+    help_dest_long_desc: "যে ওয়ালেট বা ব্যাংক অ্যাকাউন্ট টাকা ঢুকছে। উদাহরণস্বরূপ, আপনি যদি বিকাশে টাকা জমা দেন, তবে 'বিকাশ' হলো গন্তব্য (Destination)।",
+    help_lenden_long_desc: "কার কাছে আপনি টাকা পাবেন এবং কার কাছে ঋণী তা ট্র্যাক করুন। ধার দেওয়ার জন্য 'পারসন আউট' এবং ধার নেওয়ার জন্য 'পারসন ইন' ব্যবহার করুন।",
+
+    // Life-OS Philosophy & Master Types
+    doc_philosophy_title: "কেন লাইফ-ওএস (Life-OS)?",
+    doc_philosophy_desc: "এটি সাধারণ খরচ ট্রাকারের চেয়ে অনেক উন্নত। এটি একটি প্রিসিশন লেজার, রিলেশনশিপ গ্রাফ এবং এআই ডিসিশন ইঞ্জিনের সমন্বয় যা জীবনের জটিল লেনদেনগুলোকে সহজ করে তোলে।",
+    doc_classification_title: "মাস্টার লেনদেনের ধরণ",
+    doc_classification_desc: "আমরা জীবনের সব লেনদেনকে ৬টি মূল ভাগে ভাগ করেছি। বাকি সব কেবল কনটেক্সট বা প্রেক্ষাপট।",
+    doc_in_title: "১. আয় (IN)",
+    doc_in_desc_long: "বেতন, ফ্রিল্যান্সিং, উপহার, বোনাস, রিফান্ড ইত্যাদি।",
+    doc_out_title: "২. ব্যয় (OUT)",
+    doc_out_desc_long: "বাজার, খাবার, ভাড়া, বিল, চিকিৎসা, ভ্রমণ, মোবাইল রিচার্জ ইত্যাদি।",
+    doc_transfer_title: "৩. স্থানান্তর (TRANSFER)",
+    doc_transfer_desc_long: "আপনার নিজের ওয়ালেট বা ব্যাংকের মধ্যে অভ্যন্তরীণ লেনদেন (যেমন: ক্যাশ → বিকাশ)।",
+    doc_debt_given_title: "৪. ঋণ প্রদান (DEBT_GIVEN)",
+    doc_debt_given_desc_long: "আপনি পাওনাদার। কেউ আপনার কাছে ঋণী।",
+    doc_debt_taken_title: "৫. ঋণ গ্রহণ (DEBT_TAKEN)",
+    doc_debt_taken_desc_long: "আপনি দেনাদার। আপনি কারো কাছে ঋণী।",
+    doc_settlement_title: "৬. দেনা পরিশোধ (SETTLEMENT)",
+    doc_settlement_desc_long: "বিদ্যমান ঋণের টাকা পরিশোধ করা বা ফেরত পাওয়া।",
+    
+    doc_domains_title: "মাল্টি-ডোমেইন সাপোর্ট",
+    doc_domain_personal: "ব্যক্তিগত: দৈনন্দিন জীবন এবং পারিবারিক লেনদেন।",
+    doc_domain_work: "পেশাদার: অফিসের খরচ, লাঞ্চ এবং অগ্রিম টাকা।",
+    doc_domain_business: "ব্যবসা: ইনভেন্টরি, বিক্রি এবং ভেন্ডর পে-অ্যাবল।",
   }
 };

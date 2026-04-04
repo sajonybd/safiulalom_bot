@@ -1,3 +1,7 @@
+
+
+
+
 const { verifyAndConsumeLoginToken } = require("../../../lib/ui_login");
 const { createSession, buildSessionCookie } = require("../../../lib/session");
 
@@ -11,7 +15,7 @@ async function handler(req, res) {
   }
 
   try {
-    const { ok, telegramUserId } = await verifyAndConsumeLoginToken({ token });
+    const { ok, telegramUserId, whatsappUserId } = await verifyAndConsumeLoginToken({ token });
     
     if (!ok) {
       res.statusCode = 401;
@@ -19,8 +23,10 @@ async function handler(req, res) {
       return;
     }
 
+    const userId = telegramUserId || whatsappUserId;
+
     // Create session for the verified user
-    const sessionToken = await createSession({ userId: telegramUserId });
+    const sessionToken = await createSession({ userId });
     
     // Set cookie
     res.setHeader("set-cookie", buildSessionCookie(sessionToken));

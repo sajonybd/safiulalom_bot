@@ -1,4 +1,4 @@
-import { ArrowRightLeft, Settings, Loader2 } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { useSummary } from "@/hooks/useSummary";
 import { useSettings } from "@/contexts/SettingsContext";
 
@@ -57,14 +57,6 @@ export function WalletGrid() {
           <p className="text-lg font-bold font-mono tracking-tight text-foreground">
             {formatMoney(w.balance)}
           </p>
-          <div className="flex gap-1.5 mt-3 opacity-0 group-hover:opacity-100 transition-opacity">
-            <button className="flex items-center gap-1 text-[10px] px-2 py-1 rounded bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors">
-              <ArrowRightLeft className="w-3 h-3" /> {t('transfer_btn')}
-            </button>
-            <button className="flex items-center gap-1 text-[10px] px-2 py-1 rounded bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-colors">
-              <Settings className="w-3 h-3" /> {t('adjust')}
-            </button>
-          </div>
         </div>
       ))}
     </div>

@@ -58,18 +58,33 @@ async function handler(req, res) {
     }
 
     // 3. Map to local User ID logic
-    const userId = hashStringToSafeInteger("google_" + profileData.id);
+    const googleId = profileData.id;
+    const hashedUserId = hashStringToSafeInteger("google_" + googleId);
 
     // Ensure user exists
     const db = await getDb();
+    
+    // Lookup by google_id OR hashed ID (backward compat)
+    const existingUser = await db.collection("users").findOne({
+      $or: [
+        { google_id: googleId },
+        { telegram_user_id: hashedUserId }
+      ]
+    });
+
+    const userId = existingUser ? existingUser.telegram_user_id : hashedUserId;
+
     await db.collection("users").updateOne(
       { telegram_user_id: userId },
       {
-        $setOnInsert: { created_at: new Date() },
-        $set: {
-          telegram_user_id: userId,
+        $setOnInsert: { 
+          created_at: new Date(),
           family_id: String(userId),
           active_family_id: String(userId),
+        },
+        $set: {
+          google_id: googleId,
+          telegram_user_id: userId,
           provider: "google",
           email: profileData.email,
           first_name: profileData.given_name || profileData.name || null,

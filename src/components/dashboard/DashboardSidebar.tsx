@@ -1,9 +1,8 @@
 import { useEffect, useState } from "react";
-import { LayoutDashboard, Users, Wallet, BookOpen, BarChart3, AlertCircle, Settings, Bot, UsersRound, LogOut, HelpCircle, ChevronUp, Shield, Plus } from "lucide-react";
+import { LayoutDashboard, Users, Wallet, BookOpen, BarChart3, AlertCircle, Settings, Bot, UsersRound, LogOut, HelpCircle, ChevronUp, Shield, Plus, Terminal } from "lucide-react";
 import { navigationItems } from "@/lib/navigation";
 import { NavLink } from "@/components/NavLink";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { HelpModal } from "./HelpModal";
 import { useSettings } from "@/contexts/SettingsContext";
 import { useNavigate } from "react-router-dom";
 import { toast } from "sonner";
@@ -23,8 +22,7 @@ export function DashboardSidebar() {
   const { t } = useSettings();
   const { data: teamData } = useTeam();
   const teamAction = useTeamAction();
-  const [profile, setProfile] = useState<{ first_name: string; last_name: string; provider: string } | null>(null);
-  const [helpOpen, setHelpOpen] = useState(false);
+  const [profile, setProfile] = useState<{ first_name: string; last_name: string; provider: string; role?: string } | null>(null);
 
   const myFamilies = teamData?.myFamilies || [];
   const activeFamilyId = teamData?.activeFamilyId;
@@ -140,14 +138,24 @@ export function DashboardSidebar() {
           <Settings className="w-4 h-4" />
           <span>{t("settings")}</span>
         </NavLink>
-        <button
-          onClick={() => setHelpOpen(true)}
+        <NavLink
+          to="/docs"
           className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-sidebar-foreground hover:bg-sidebar-accent transition-colors mt-0.5"
+          activeClassName="bg-primary/10 text-primary font-semibold"
         >
           <HelpCircle className="w-4 h-4 text-primary" />
           <span>{t("help_docs")}</span>
-        </button>
-        <HelpModal open={helpOpen} onOpenChange={setHelpOpen} />
+        </NavLink>
+        {profile?.role === 'ADMIN' && (
+          <NavLink
+            to="/logs"
+            className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-sidebar-foreground hover:bg-sidebar-accent transition-colors mt-0.5"
+            activeClassName="bg-primary/10 text-primary font-semibold"
+          >
+            <Terminal className={`w-4 h-4 text-red-500`} />
+            <span className="text-red-500 font-bold uppercase tracking-widest text-[10px]">Audit Logs</span>
+          </NavLink>
+        )}
         <div className="mt-4 px-3 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">

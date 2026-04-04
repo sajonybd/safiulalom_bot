@@ -29,7 +29,8 @@ import {
 import { useAddEntry, useUpdateEntry } from "@/hooks/useLedger";
 import { useEntities } from "@/hooks/useEntities";
 import { Combobox } from "@/components/ui/combobox";
-import { HelpModal } from "./HelpModal";
+import { navigationItems } from "@/lib/navigation";
+import { useNavigate } from "react-router-dom";
 import { useSettings } from "@/contexts/SettingsContext";
 import { toast } from "sonner";
 import { Loader2, HelpCircle } from "lucide-react";
@@ -67,9 +68,9 @@ interface TransactionModalProps {
 export function TransactionModal({ open, onOpenChange, defaultValues }: TransactionModalProps) {
   const addEntry = useAddEntry();
   const updateEntry = useUpdateEntry();
+  const navigate = useNavigate();
   const { data: entitiesData, isLoading: isLoadingEntities } = useEntities();
   const { t, currencySymbol } = useSettings();
-  const [helpOpen, setHelpOpen] = useState(false);
 
   const entities = entitiesData?.entities || [];
   
@@ -179,7 +180,7 @@ export function TransactionModal({ open, onOpenChange, defaultValues }: Transact
           <div className="flex items-center gap-2">
             <DialogTitle>{isEdit ? t("edit_transaction") : t("add_transaction")}</DialogTitle>
             <button 
-              onClick={() => setHelpOpen(true)}
+              onClick={() => { onOpenChange(false); navigate("/docs"); }}
               className="p-1 rounded-full hover:bg-muted transition-colors"
               title={t("help_docs")}
             >
@@ -187,7 +188,6 @@ export function TransactionModal({ open, onOpenChange, defaultValues }: Transact
             </button>
           </div>
         </DialogHeader>
-        <HelpModal open={helpOpen} onOpenChange={setHelpOpen} />
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
@@ -211,6 +211,7 @@ export function TransactionModal({ open, onOpenChange, defaultValues }: Transact
                       <SelectItem value="loan_taken">{t("loan_taken")}</SelectItem>
                       <SelectItem value="settlement_in">{t("settlement_in")}</SelectItem>
                       <SelectItem value="settlement_out">{t("settlement_out")}</SelectItem>
+                      <SelectItem value="transfer">{t("transfer")}</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />

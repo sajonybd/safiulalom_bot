@@ -20,7 +20,8 @@ export default async function handler(req, res) {
         last_name: user?.last_name || "",
         provider: user?.provider || "telegram",
         email: user?.email || null,
-        username: user?.username || null
+        username: user?.username || null,
+        role: user?.role || "MEMBER"
       } 
     });
   } catch (err) {

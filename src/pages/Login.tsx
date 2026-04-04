@@ -11,17 +11,19 @@ import { useSettings } from "@/contexts/SettingsContext";
 export default function Login() {
   const navigate = useNavigate();
   const { t } = useSettings();
-  const [telegramMode, setTelegramMode] = useState(false);
-  const [telegramId, setTelegramId] = useState("");
-  const [telegramCode, setTelegramCode] = useState("");
+  const [botMode, setBotMode] = useState(false);
+  const [platformId, setPlatformId] = useState("");
+  const [otpCode, setOtpCode] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [tokenAttempted, setTokenAttempted] = useState(false);
+  const [isVerifyingToken, setIsVerifyingToken] = useState(false);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     const token = params.get("token");
     if (token && !tokenAttempted) {
       setTokenAttempted(true);
+      setIsVerifyingToken(true);
       autoTokenLogin(token);
     }
   }, []);
@@ -38,9 +40,11 @@ export default function Login() {
         window.location.href = data.redirect || "/";
       } else {
         toast.error(t("login_failed") + ": token is invalid or expired.");
+        setIsVerifyingToken(false);
       }
     } catch (err) {
       toast.error(t("login_failed"));
+      setIsVerifyingToken(false);
     } finally {
       setIsLoading(false);
     }
@@ -50,19 +54,29 @@ export default function Login() {
     window.location.href = "/api/auth/google";
   };
 
-  const submitTelegramLogin = async (e: React.FormEvent) => {
+
+  const submitBotLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!telegramId || !telegramCode) {
+    if (!platformId || !otpCode) {
       toast.error(t("enter_id_code"));
       return;
     }
 
     setIsLoading(true);
     try {
+      const payload: any = { code: otpCode };
+      if (platformId.includes("@c.us")) {
+        payload.whatsappUserId = platformId;
+      } else if (/^\d+$/.test(platformId)) {
+        payload.telegramUserId = Number(platformId);
+      } else {
+        payload.telegramUserId = platformId; // Fallback
+      }
+
       const res = await fetch("/api/ui_login", { 
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ telegramUserId: Number(telegramId), code: telegramCode })
+        body: JSON.stringify(payload)
       });
       const data = await res.json();
       if (data.ok) {
@@ -79,15 +93,35 @@ export default function Login() {
     }
   };
 
+  if (isVerifyingToken) {
+    return (
+      <div className="flex h-screen w-full items-center justify-center bg-[hsl(var(--background))] p-4 font-sans">
+        <div className="text-center space-y-6">
+          <div className="relative mx-auto h-24 w-24">
+            <div className="absolute inset-0 rounded-3xl border-4 border-primary/10 animate-pulse"></div>
+            <div className="absolute inset-0 rounded-3xl border-t-4 border-primary animate-spin"></div>
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Bot className="h-10 w-10 text-primary animate-bounce" />
+            </div>
+          </div>
+          <div className="space-y-2">
+            <h2 className="text-xl font-bold tracking-tight text-foreground">{t("verifying_token")}</h2>
+            <p className="text-sm text-muted-foreground animate-pulse">{t("loading")}</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex h-screen w-full items-center justify-center bg-[hsl(var(--background))] p-4 font-sans">
       <Card className="w-full max-w-md border shadow-lg relative">
-        {telegramMode && (
+        {botMode && (
           <Button 
             variant="ghost" 
             size="icon" 
             className="absolute left-2 top-2 z-10" 
-            onClick={() => setTelegramMode(false)}
+            onClick={() => setBotMode(false)}
             disabled={isLoading}
           >
             <ArrowLeft className="h-4 w-4" />
@@ -100,14 +134,14 @@ export default function Login() {
           </div>
           <CardTitle className="text-2xl font-bold tracking-tight">{t("welcome_to")}</CardTitle>
           <CardDescription className="text-sm">
-            {telegramMode 
-              ? t("telegram_login_desc")
+            {botMode 
+              ? "Login using your Telegram ID or WhatsApp ID and the 6-digit code from the bot."
               : t("login_desc")}
           </CardDescription>
         </CardHeader>
         
         <CardContent className="space-y-4">
-          {!telegramMode ? (
+          {!botMode ? (
             <>
               <Button 
                 variant="outline" 
@@ -126,36 +160,48 @@ export default function Login() {
               <Button 
                 variant="outline" 
                 className="w-full h-11 relative flex items-center justify-center space-x-2 bg-[#0088cc] text-white hover:bg-[#0077b3] hover:text-white border-none" 
-                onClick={() => setTelegramMode(true)}
+                onClick={() => setBotMode(true)}
               >
                 <svg className="w-5 h-5 absolute left-4 fill-white" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.882-.662 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
                 </svg>
-                <span>{t("continue_with_telegram")}</span>
+                <span>Continue with Telegram</span>
               </Button>
+
+              <Button 
+                variant="outline" 
+                className="w-full h-11 relative flex items-center justify-center space-x-2 bg-[#25D366] text-white hover:bg-[#128C7E] hover:text-white border-none" 
+                onClick={() => setBotMode(true)}
+              >
+                <svg className="w-5 h-5 absolute left-4 fill-white" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
+                </svg>
+                <span>Continue with WhatsApp</span>
+              </Button>
+
             </>
           ) : (
-            <form onSubmit={submitTelegramLogin} className="space-y-4">
+            <form onSubmit={submitBotLogin} className="space-y-4">
               <div className="space-y-2">
-                <Label htmlFor="telegram_id">{t("telegram_user_id")}</Label>
+                <Label htmlFor="bot_id">Enter Bot User ID (Numeric ID or WhatsApp Phone)</Label>
                 <Input 
-                  id="telegram_id" 
-                  placeholder={t("login_id_placeholder")}
-                  value={telegramId}
-                  onChange={(e) => setTelegramId(e.target.value)}
+                  id="bot_id" 
+                  placeholder="e.g. 12345678 or 8801967550xxx@c.us"
+                  value={platformId}
+                  onChange={(e) => setPlatformId(e.target.value)}
                   disabled={isLoading}
                   autoComplete="off"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="telegram_code">{t("login_otp_code")}</Label>
+                <Label htmlFor="otp_code">{t("login_otp_code")}</Label>
                 <Input 
-                  id="telegram_code" 
+                  id="otp_code" 
                   placeholder={t("login_code_placeholder")} 
                   type="text"
                   maxLength={6}
-                  value={telegramCode}
-                  onChange={(e) => setTelegramCode(e.target.value)}
+                  value={otpCode}
+                  onChange={(e) => setOtpCode(e.target.value)}
                   disabled={isLoading}
                   autoComplete="off"
                 />

@@ -25,6 +25,7 @@ async function handler(req, res) {
         ok: true, 
         user: {
           telegramId: user.telegram_user_id,
+          linkedTelegramId: user.linked_telegram_id || null,
           username: user.username,
           firstName: user.first_name,
           lastName: user.last_name,

@@ -1,13 +1,13 @@
 import { useState, useEffect } from "react";
 import { DashboardLayout } from "@/components/dashboard/DashboardLayout";
-import { Users, Search, Plus, MoreVertical, Edit, Trash2, Building2, Car, Zap } from "lucide-react";
+import { Users, Search, Plus, Edit, Trash2, Building2, Car, Zap, Mail, Phone, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Loader2 } from "lucide-react";
 import { toast } from "sonner";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useSettings } from "@/contexts/SettingsContext";
+import { ConfirmModal } from "@/components/dashboard/ConfirmModal";
 
 const iconMap: Record<string, any> = {
   PERSON: Users,
@@ -32,8 +32,12 @@ export default function Entities() {
     type: "PERSON",
     subType: "",
     groupId: "",
+    phone: "",
+    email: "",
     openingBalance: ""
   });
+  const [isConfirmOpen, setIsConfirmOpen] = useState(false);
+  const [deletingId, setDeletingId] = useState<{id: string, name: string} | null>(null);
 
   const fetchEntities = async () => {
     setIsLoading(true);
@@ -63,7 +67,9 @@ export default function Entities() {
       const payload = {
         ...(editingId ? { id: editingId } : {}),
         ...rest,
-        metadata: { openingBalance: Number(openingBalance) || 0 }
+        metadata: { 
+          openingBalance: Number(openingBalance) || 0,
+        }
       };
 
       const res = await fetch("/api/ui_entities", {
@@ -85,10 +91,10 @@ export default function Entities() {
     }
   };
 
-  const handleDelete = async (id: string, name: string) => {
-    if (!window.confirm(t("delete_confirm").replace("{name}", name))) return;
+  const handleDelete = async () => {
+    if (!deletingId) return;
     try {
-      const res = await fetch(`/api/ui_entities?id=${id}`, { method: "DELETE" });
+      const res = await fetch(`/api/ui_entities?id=${deletingId.id}`, { method: "DELETE" });
       const data = await res.json();
       if (data.ok) {
         toast.success(t("delete_success"));
@@ -107,11 +113,13 @@ export default function Entities() {
         type: entity.type,
         subType: entity.subType || "",
         groupId: entity.groupId || "",
+        phone: entity.phone || "",
+        email: entity.email || "",
         openingBalance: entity.metadata?.openingBalance || "",
       });
     } else {
       setEditingId(null);
-      setFormData({ name: "", type: "PERSON", subType: "", groupId: "", openingBalance: "" });
+      setFormData({ name: "", type: "PERSON", subType: "", groupId: "", phone: "", email: "", openingBalance: "" });
     }
     setModalOpen(true);
   };
@@ -180,6 +188,16 @@ export default function Entities() {
                        <label className="text-sm font-medium">{t("group_house")}</label>
                        <Input placeholder={p.grp} value={formData.groupId} onChange={e => setFormData({ ...formData, groupId: e.target.value })} />
                     </div>
+                    <div className="grid grid-cols-2 gap-3">
+                       <div className="space-y-2">
+                         <label className="text-sm font-medium">{t("phone_label")}</label>
+                         <Input placeholder="+880..." value={formData.phone} onChange={e => setFormData({ ...formData, phone: e.target.value })} />
+                       </div>
+                       <div className="space-y-2">
+                         <label className="text-sm font-medium">{t("email_label")}</label>
+                         <Input placeholder="email@..." value={formData.email} onChange={e => setFormData({ ...formData, email: e.target.value })} />
+                       </div>
+                     </div>
                     {formData.type === "ACCOUNT" && (
                       <div className="space-y-2">
                         <label className="text-sm font-medium">{t("opening_balance")}</label>
@@ -238,7 +256,10 @@ export default function Entities() {
                       <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => openModal(entity)}>
                         <Edit className="w-3.5 h-3.5" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => handleDelete(entity.id, entity.name)}>
+                      <Button variant="ghost" size="icon" className="h-6 w-6 text-destructive" onClick={() => {
+                        setDeletingId({ id: entity.id, name: entity.name });
+                        setIsConfirmOpen(true);
+                      }}>
                         <Trash2 className="w-3.5 h-3.5" />
                       </Button>
                     </div>
@@ -257,12 +278,38 @@ export default function Entities() {
                     {entity.subType && <Badge variant="secondary" className="text-[10px]">{entity.subType}</Badge>}
                     {entity.groupId && <Badge variant="outline" className="text-[10px] bg-muted/50">{entity.groupId}</Badge>}
                   </div>
+
+                  {(entity.phone || entity.email) && (
+                    <div className="pt-2 flex flex-col gap-1.5 border-t border-border mt-2">
+                      {entity.phone && (
+                        <div className="flex items-center gap-2 text-[11px] text-muted-foreground hover:text-primary transition-colors cursor-pointer" onClick={() => window.open(`tel:${entity.phone}`)}>
+                          <Phone className="w-3 h-3" />
+                          <span>{entity.phone}</span>
+                        </div>
+                      )}
+                      {entity.email && (
+                        <div className="flex items-center gap-2 text-[11px] text-muted-foreground hover:text-primary transition-colors cursor-pointer" onClick={() => window.open(`mailto:${entity.email}`)}>
+                          <Mail className="w-3 h-3" />
+                          <span className="truncate">{entity.email}</span>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             );
           })}
         </div>
       </div>
+
+      <ConfirmModal
+        isOpen={isConfirmOpen}
+        onOpenChange={setIsConfirmOpen}
+        onConfirm={handleDelete}
+        title={t("delete_entity")}
+        description={deletingId ? t("delete_confirm").replace("{name}", deletingId.name) : ""}
+        confirmText={t("delete")}
+      />
     </DashboardLayout>
   );
 }

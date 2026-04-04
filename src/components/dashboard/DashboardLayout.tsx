@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { NavLink } from "@/components/NavLink";
 import { LogOut, HelpCircle, Settings as SettingsIcon, Menu, Bot, X } from "lucide-react";
 import { navigationItems } from "@/lib/navigation";
-import { HelpModal } from "./HelpModal";
 import { toast } from "sonner";
 
 import { useSettings } from "@/contexts/SettingsContext";
@@ -16,7 +15,6 @@ import { ChatWidget } from "./ChatWidget";
 
 export function DashboardLayout({ children }: { children: React.ReactNode }) {
   const [mobileOpen, setMobileOpen] = useState(false);
-  const [helpOpen, setHelpOpen] = useState(false);
   const { t, language } = useSettings();
   const navigate = useNavigate();
   const [profile, setProfile] = useState<{ first_name: string; last_name: string; provider: string } | null>(null);
@@ -95,52 +93,50 @@ export function DashboardLayout({ children }: { children: React.ReactNode }) {
                 <span>{t("settings")}</span>
               </NavLink>
               
-              <button
-                onClick={() => {
-                  setMobileOpen(false);
-                  setHelpOpen(true);
-                }}
-                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
-              >
-                <HelpCircle className="w-4 h-4 text-primary" />
-                <span>{t("help_docs")}</span>
-              </button>
+                <button
+                  onClick={() => {
+                    setMobileOpen(false);
+                    navigate("/docs");
+                  }}
+                  className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm text-sidebar-foreground hover:bg-sidebar-accent transition-colors"
+                >
+                  <HelpCircle className="w-4 h-4 text-primary" />
+                  <span>{t("help_docs")}</span>
+                </button>
 
-              <div className="pt-4 pb-2 px-3 border-t border-sidebar-border mt-2">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">
-                      {profile?.first_name?.[0]?.toUpperCase() || "U"}
+                <div className="pt-4 pb-2 px-3 border-t border-sidebar-border mt-2">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <div className="w-6 h-6 rounded-full bg-primary/20 flex items-center justify-center text-[10px] font-bold text-primary">
+                        {profile?.first_name?.[0]?.toUpperCase() || "U"}
+                      </div>
+                      <div>
+                        <p className="text-sm font-semibold text-foreground">
+                          {profile ? `${profile.first_name} ${profile.last_name}`.trim() : t("loading")}
+                        </p>
+                        <p className="text-xs text-muted-foreground capitalize">
+                          {t("via")} {profile?.provider || "..."}
+                        </p>
+                      </div>
                     </div>
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">
-                        {profile ? `${profile.first_name} ${profile.last_name}`.trim() : t("loading")}
-                      </p>
-                      <p className="text-xs text-muted-foreground capitalize">
-                        {t("via")} {profile?.provider || "..."}
-                      </p>
+                    <div className="flex items-center gap-1.5">
+                      <ThemeToggle />
+                      <button 
+                        onClick={handleLogout}
+                        className="p-1.5 rounded-md hover:bg-destructive/10 hover:text-destructive transition-colors"
+                        title={t("logout")}
+                      >
+                        <LogOut className="w-4 h-4" />
+                      </button>
                     </div>
-                  </div>
-                  <div className="flex items-center gap-1.5">
-                    <ThemeToggle />
-                    <button 
-                      onClick={handleLogout}
-                      className="p-1.5 rounded-md hover:bg-destructive/10 hover:text-destructive transition-colors"
-                      title={t("logout")}
-                    >
-                      <LogOut className="w-4 h-4" />
-                    </button>
                   </div>
                 </div>
               </div>
-            </div>
-          </aside>
-        </div>
-      )}
-      
-      <HelpModal open={helpOpen} onOpenChange={setHelpOpen} />
-
-      <main className="flex-1 min-w-0">
+            </aside>
+          </div>
+        )}
+        
+        <main className="flex-1 min-w-0">
         <header className="lg:hidden sticky top-0 z-30 bg-card/80 backdrop-blur-xl border-b border-border px-4 py-3 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <button onClick={() => setMobileOpen(true)}>

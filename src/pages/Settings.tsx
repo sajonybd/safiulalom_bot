@@ -16,6 +16,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { toast } from "sonner";
 
 const Settings = () => {
   const { language, currency, setLanguage, setCurrency, t } = useSettings();
@@ -28,6 +29,10 @@ const Settings = () => {
     email: "",
     phone: ""
   });
+
+  const [tgSyncId, setTgSyncId] = useState("");
+  const [tgSyncCode, setTgSyncCode] = useState("");
+  const [isSyncing, setIsSyncing] = useState(false);
 
   useEffect(() => {
     if (userData?.user) {
@@ -49,6 +54,33 @@ const Settings = () => {
         phone: formData.phone
       });
     } catch (err) {}
+  };
+
+  const handleSyncTelegram = async () => {
+    if (!tgSyncId || !tgSyncCode) {
+      toast.error(t("enter_id_code"));
+      return;
+    }
+
+    setIsSyncing(true);
+    try {
+      const res = await fetch("/api/auth/link_telegram", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ telegramUserId: tgSyncId, code: tgSyncCode })
+      });
+      const data = await res.json();
+      if (data.ok) {
+        toast.success(t("sync_success"));
+        window.location.reload(); // Refresh to get updated user data
+      } else {
+        toast.error(data.error || t("sync_failed"));
+      }
+    } catch (err) {
+      toast.error(t("sync_failed"));
+    } finally {
+      setIsSyncing(false);
+    }
   };
 
   return (
@@ -129,11 +161,6 @@ const Settings = () => {
                 </div>
               </div>
             )}
-            <div className="space-y-1.5 pt-2">
-              <Label className="text-xs">{t("telegram_user_id")}</Label>
-              <Input value={userData?.user?.telegramId || ""} className="h-9 text-sm font-mono" disabled />
-              <p className="text-[10px] text-muted-foreground">{t("connected_via")} {userData?.user?.provider || 'Telegram'}</p>
-            </div>
             <div className="flex justify-end pt-2">
               <Button size="sm" className="gap-1.5" onClick={handleSave} disabled={updateProfile.isPending}>
                 {updateProfile.isPending ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Save className="w-3.5 h-3.5" />}
@@ -141,6 +168,66 @@ const Settings = () => {
               </Button>
             </div>
           </div>
+
+          {/* Telegram Sync Section - Only for Google users not already fully synced */}
+          {userData?.user?.provider === 'google' && (
+            <div className="rounded-xl border border-border bg-card p-5 space-y-4">
+              <div className="flex items-center gap-2">
+                <div className="p-1.5 bg-[#0088cc]/10 rounded-lg">
+                  <svg className="w-4 h-4 fill-[#0088cc]" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                    <path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.882-.662 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/>
+                  </svg>
+                </div>
+                <h3 className="text-sm font-semibold text-foreground">{t("telegram_sync")}</h3>
+              </div>
+              
+              <p className="text-xs text-muted-foreground">{t("sync_telegram_desc")}</p>
+              
+              {userData.user.linkedTelegramId ? (
+                <div className="flex items-center justify-between p-3 bg-muted/30 rounded-lg border border-primary/10">
+                   <div className="flex flex-col gap-0.5">
+                     <span className="text-[10px] uppercase font-bold text-primary tracking-wider">{t("already_synced")}</span>
+                     <span className="text-sm font-mono">{userData.user.linkedTelegramId}</span>
+                   </div>
+                   <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_8px_rgba(34,197,94,0.5)]"></div>
+                </div>
+              ) : (
+                <div className="space-y-4 pt-2">
+                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">{t("telegram_user_id")}</Label>
+                        <Input 
+                          placeholder="e.g. 123456789" 
+                          className="h-9 text-sm"
+                          value={tgSyncId}
+                          onChange={e => setTgSyncId(e.target.value)}
+                        />
+                      </div>
+                      <div className="space-y-1.5">
+                        <Label className="text-xs">{t("login_otp_code")}</Label>
+                        <Input 
+                          placeholder="6-digit code" 
+                          className="h-9 text-sm"
+                          maxLength={6}
+                          value={tgSyncCode}
+                          onChange={e => setTgSyncCode(e.target.value)}
+                        />
+                      </div>
+                   </div>
+                   <p className="text-[10px] text-muted-foreground italic">{t("how_to_get_id_code")}</p>
+                   <Button 
+                    size="sm" 
+                    className="w-full sm:w-auto bg-[#0088cc] hover:bg-[#0077b3] gap-1.5"
+                    onClick={handleSyncTelegram}
+                    disabled={isSyncing}
+                   >
+                    {isSyncing ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : null}
+                    {t("link_now")}
+                   </Button>
+                </div>
+              )}
+            </div>
+          )}
         </TabsContent>
 
         {/* Security */}

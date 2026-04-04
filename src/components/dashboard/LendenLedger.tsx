@@ -96,7 +96,7 @@ export function LendenLedger() {
                 </p>
                 <button
                   onClick={() => setSettlingPerson(p)}
-                  className="opacity-0 group-hover:opacity-100 text-[10px] px-2 py-1 rounded bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-all"
+                  className="opacity-50 group-hover:opacity-100 text-[10px] px-2 py-1 rounded bg-secondary text-secondary-foreground hover:bg-secondary/80 transition-all"
                 >
                   {t('settle')}
                 </button>

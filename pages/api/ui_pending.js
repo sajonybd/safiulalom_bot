@@ -22,9 +22,12 @@ async function handler(req, res) {
       return;
     }
 
+    const { getFamilyId } = require("../../lib/users");
+    const familyId = await getFamilyId(userId);
+
     // GET: List all pending entries
     if (req.method === "GET") {
-      const entries = await listPendingEntries({ userId });
+      const entries = await listPendingEntries({ userId, familyId });
       res.statusCode = 200;
       res.setHeader("content-type", "application/json; charset=utf-8");
       res.end(JSON.stringify({ ok: true, entries }));

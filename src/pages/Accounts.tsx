@@ -4,19 +4,18 @@ import { Button } from "@/components/ui/button";
 import { useSummary } from "@/hooks/useSummary";
 import { useLedger } from "@/hooks/useLedger";
 import { TransactionModal } from "@/components/dashboard/TransactionModal";
+import { RecentEntries } from "@/components/dashboard/RecentEntries";
 import { useState } from "react";
 import { useSettings } from "@/contexts/SettingsContext";
 import { Loader2 } from "lucide-react";
 
 const Accounts = () => {
   const { data: summaryData, isLoading: summaryLoading } = useSummary();
-  const { data: ledgerData, isLoading: ledgerLoading } = useLedger();
   const { t, currencySymbol } = useSettings();
   const [modalOpen, setModalOpen] = useState(false);
   const [modalType, setModalType] = useState<"transfer" | "in" | "out">("in");
 
   const accounts = summaryData?.accounts || [];
-  const recentEntries = ledgerData?.entries || [];
   const totalBalance = accounts.reduce((s: number, w: any) => s + w.balance, 0);
 
   const handleOpenModal = (type: "transfer" | "in" | "out", account?: string) => {
@@ -85,38 +84,7 @@ const Accounts = () => {
         </div>
 
         {/* Recent Transactions */}
-        <div>
-          <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-3">{t("recent_transactions")}</h3>
-          <div className="rounded-xl border border-border bg-card divide-y divide-border">
-            {ledgerLoading ? (
-              <div className="py-10 flex justify-center">
-                <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
-              </div>
-            ) : recentEntries.slice(0, 6).map((entry: any) => {
-               const isInflow = ["in", "fund_received", "loan_taken", "settlement_in", "person_in"].includes(entry.kind);
-               return (
-                <div key={entry.id} className="flex items-center justify-between px-4 py-3">
-                  <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold ${
-                      isInflow ? 'bg-primary/10 text-primary' : 'bg-destructive/10 text-destructive'
-                    }`}>
-                      {isInflow ? '↓' : '↑'}
-                    </div>
-                    <div>
-                      <p className="text-sm text-foreground">{entry.note}</p>
-                      <p className="text-xs text-muted-foreground">{new Date(entry.created_at).toLocaleDateString()}</p>
-                    </div>
-                  </div>
-                  <span className={`text-sm font-mono font-semibold ${
-                    isInflow ? 'text-primary' : 'text-foreground'
-                  }`}>
-                    {isInflow ? '+' : '-'}৳{entry.amount.toLocaleString()}
-                  </span>
-                </div>
-               );
-             })}
-          </div>
-        </div>
+        <RecentEntries />
       </div>
     </DashboardLayout>
   );
