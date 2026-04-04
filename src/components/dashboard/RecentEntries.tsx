@@ -23,13 +23,13 @@ export function RecentEntries() {
   const kindConfig: Record<string, { icon: any; color: string; label: string }> = {
     in: { icon: ArrowDownLeft, color: 'text-primary', label: t('income') },
     out: { icon: ArrowUpRight, color: 'text-destructive', label: t('expense') },
-    sub: { icon: Repeat, color: 'text-accent', label: t('subscription') },
-    person_out: { icon: ArrowUpRight, color: 'text-accent', label: t('person_out') },
+    sub: { icon: Repeat, color: 'text-orange-500', label: t('subscription') },
+    person_out: { icon: ArrowUpRight, color: 'text-orange-500', label: t('person_out') },
     person_in: { icon: ArrowDownLeft, color: 'text-primary', label: t('person_in') },
-    loan_given: { icon: ArrowUpRight, color: 'text-accent', label: t('loan_given') },
+    loan_given: { icon: ArrowUpRight, color: 'text-orange-500', label: t('loan_given') },
     loan_taken: { icon: ArrowDownLeft, color: 'text-primary', label: t('loan_taken') },
     settlement_in: { icon: ArrowDownLeft, color: 'text-primary', label: t('settlement_in') },
-    settlement_out: { icon: ArrowUpRight, color: 'text-accent', label: t('settlement_out') },
+    settlement_out: { icon: ArrowUpRight, color: 'text-orange-500', label: t('settlement_out') },
   };
 
   if (isLoading) {
@@ -86,18 +86,18 @@ export function RecentEntries() {
                         ))}
                       </div>
                     )}
-                    <p className="text-[10px] text-muted-foreground flex items-center gap-1.5 mt-0.5">
-                      <span className="opacity-70">{new Date(entry.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+                    <p className="text-[10px] text-muted-foreground flex flex-wrap items-center gap-1.5 mt-0.5">
+                      <span className="opacity-70 whitespace-nowrap">{new Date(entry.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
                       {entry.person && (
                         <>
-                          <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
-                          <span className="font-medium text-accent truncate">{entry.person}</span>
+                          <span className="w-1 h-1 rounded-full bg-muted-foreground/30 shrink-0" />
+                          <span className="font-medium text-orange-600 truncate max-w-[120px]">{entry.person}</span>
                         </>
                       )}
                       {(entry.source_account || entry.destination_account) && (
                         <>
-                          <span className="w-1 h-1 rounded-full bg-muted-foreground/30" />
-                          <span className="font-medium text-primary/80 truncate">
+                          <span className="w-1 h-1 rounded-full bg-muted-foreground/30 shrink-0" />
+                          <span className="font-medium text-primary/80 truncate max-w-[120px]">
                             {entry.kind === 'transfer' 
                               ? `${entry.source_account || '?'} → ${entry.destination_account || '?'}`
                               : `${isInflow ? (entry.destination_account || entry.source_account) : (entry.source_account || entry.destination_account)}`}
