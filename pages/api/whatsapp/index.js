@@ -81,7 +81,8 @@ async function handler(req, res) {
     const chatId = messageData.from; // e.g. "8801967550181@c.us"
     
     // Ignore group chats and other non-personal chats
-    if (!chatId || !chatId.endsWith("@c.us")) {
+    // Note: We now allow @c.us and @lid (LID is used for some WhatsApp account types)
+    if (!chatId || (!chatId.endsWith("@c.us") && !chatId.endsWith("@lid"))) {
       res.statusCode = 200;
       res.end("Ignored non-personal chat: " + chatId);
       return;
